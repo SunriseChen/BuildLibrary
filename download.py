@@ -22,24 +22,33 @@ def download_file(url):
 
 	# handle errors
 	except HTTPError, e:
-		print('HTTP Error: %s %s' % (e.code, url))
+		print('HTTP Error: %s, url=%s' % (e.code, url))
 	except URLError, e:
-		print('URL Error: %s %s' % (e.reason, url))
+		print('URL Error: %s, url=%s' % (e.reason, url))
 
 
 def unpack_file(file_name):
 	import tarfile
-	print('Unpacking file: ' + file_name)
-	tar = tarfile.open(file_name)
-	tar.extractall()
-	tar.close()
-	print('Unpacked.')
+
+	try:
+		print('Unpacking file: ' + file_name)
+		with tarfile.open(file_name) as tar_file:
+			tar_file.extractall()
+		print('Unpacked.')
+
+	# handle errors
+	except tarfile.TarError, e:
+		print('Tar Error: %s, file_name=%s' % (e.__doc__, file_name))
 
 
 def test():
 	url = 'http://prdownloads.sourceforge.net/scons/scons-2.2.0.tar.gz'
 	file_name = download_file(url)
 	unpack_file(file_name)
+	dir_name = file_name[:-7]
+	os.chdir(dir_name)
+	print(os.getcwd())
+	os.execlp('python', 'setup.py', 'install')
 
 if __name__ == '__main__':
 	test()
