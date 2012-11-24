@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import subprocess
 
 def download_file(url):
 	from urllib2 import urlopen, URLError, HTTPError
@@ -45,10 +46,15 @@ def test():
 	url = 'http://prdownloads.sourceforge.net/scons/scons-2.2.0.tar.gz'
 	file_name = download_file(url)
 	unpack_file(file_name)
+	print('Installing Scons...')
 	dir_name = file_name[:-7]
 	os.chdir(dir_name)
-	print(os.getcwd())
-	os.execlp('python', 'setup.py', 'install')
+	p = subprocess.Popen(['python', 'setup.py', 'install'])
+	p.wait()
+	if p.returncode == 0:
+		print('Scons installed.')
+	else:
+		print('Scons install failed.')
 
 if __name__ == '__main__':
 	test()
