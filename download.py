@@ -5,7 +5,12 @@ import os
 import subprocess
 
 def get_abs_dir(directory):
-	abs_dir = os.path.abspath(directory)
+	import tempfile
+
+	if directory:
+		abs_dir = os.path.abspath(directory)
+	else:
+		abs_dir = tempfile.mkdtemp()
 	if not os.path.exists(abs_dir):
 		os.makedirs(abs_dir)
 	return abs_dir
@@ -44,7 +49,9 @@ def unpack_file(file_name, target_dir):
 def test():
 	url = 'http://prdownloads.sourceforge.net/scons/scons-2.2.0.tar.gz'
 	file_path = download_file(url, 'download')
+	#file_path = download_file(url, None)
 	dir_path = unpack_file(file_path, 'unpack')
+	#dir_path = unpack_file(file_path, None)
 	print('Installing Scons...')
 	dir_path = os.path.join(dir_path, os.path.basename(file_path)[:-7])
 	os.chdir(dir_path)
