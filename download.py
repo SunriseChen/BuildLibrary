@@ -56,6 +56,10 @@ def test():
 	else:
 		print('Scons install failed.')
 
+def test1():
+	from settings import PYTHON_HOME
+	print(PYTHON_HOME)
+
 if __name__ == '__main__':
-	test()
+	test1()
 
