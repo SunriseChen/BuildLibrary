@@ -4,53 +4,50 @@
 import os
 import subprocess
 
+def get_abs_dir(directory):
+	abs_dir = os.path.abspath(directory)
+	if not os.path.exists(abs_dir):
+		os.makedirs(abs_dir)
+	return abs_dir
+
 def download_file(url, target_dir):
 	from urllib2 import urlopen, URLError, HTTPError
 
-	try:
-		# Open the url
-		print('Opening url: ' + url)
-		remote_file = urlopen(url)
+	# Open the url
+	print('Opening url: ' + url)
+	remote_file = urlopen(url)
 
-		# Open our local file for writing
-		print('Downloading...')
-		file_name = os.path.basename(url)
-		file_path = os.path.join(os.path.abspath(target_dir), file_name)
-		print(file_path)
-		with open(file_path, "wb") as local_file:
-			local_file.write(remote_file.read())
-		print('Downloaded.')
+	# Open our local file for writing
+	print('Downloading...')
+	file_name = os.path.basename(url)
+	file_path = os.path.join(get_abs_dir(target_dir), file_name)
+	with open(file_path, "wb") as local_file:
+		local_file.write(remote_file.read())
+	print('Downloaded.')
 
-		return file_path
-
-	# handle errors
-	except HTTPError, e:
-		print('HTTP Error: %s, url=%s' % (e.code, url))
-	except URLError, e:
-		print('URL Error: %s, url=%s' % (e.reason, url))
+	return file_path
 
 
-def unpack_file(file_name):
+def unpack_file(file_name, target_dir):
 	import tarfile
 
-	try:
-		print('Unpacking file: ' + file_name)
+	print('Unpacking file: ' + file_name)
+	dir_path = get_abs_dir(target_dir)
+	if tarfile.is_tarfile(file_name):
 		with tarfile.open(file_name) as tar_file:
-			tar_file.extractall()
-		print('Unpacked.')
+			tar_file.extractall(dir_path)
+	print('Unpacked.')
 
-	# handle errors
-	except tarfile.TarError, e:
-		print('Tar Error: %s, file_name=%s' % (e.__doc__, file_name))
+	return dir_path
 
 
 def test():
 	url = 'http://prdownloads.sourceforge.net/scons/scons-2.2.0.tar.gz'
-	file_name = download_file(url, '.')
-	unpack_file(file_name)
+	file_path = download_file(url, 'download')
+	dir_path = unpack_file(file_path, 'unpack')
 	print('Installing Scons...')
-	dir_name = file_name[:-7]
-	os.chdir(dir_name)
+	dir_path = os.path.join(dir_path, os.path.basename(file_path)[:-7])
+	os.chdir(dir_path)
 	p = subprocess.Popen(['python', 'setup.py', 'install'])
 	p.wait()
 	if p.returncode == 0:
