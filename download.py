@@ -4,7 +4,7 @@
 import os
 import subprocess
 
-def download_file(url):
+def download_file(url, target_dir):
 	from urllib2 import urlopen, URLError, HTTPError
 
 	try:
@@ -15,11 +15,13 @@ def download_file(url):
 		# Open our local file for writing
 		print('Downloading...')
 		file_name = os.path.basename(url)
-		with open(file_name, "wb") as local_file:
+		file_path = os.path.join(os.path.abspath(target_dir), file_name)
+		print(file_path)
+		with open(file_path, "wb") as local_file:
 			local_file.write(remote_file.read())
 		print('Downloaded.')
 
-		return file_name
+		return file_path
 
 	# handle errors
 	except HTTPError, e:
@@ -44,7 +46,7 @@ def unpack_file(file_name):
 
 def test():
 	url = 'http://prdownloads.sourceforge.net/scons/scons-2.2.0.tar.gz'
-	file_name = download_file(url)
+	file_name = download_file(url, '.')
 	unpack_file(file_name)
 	print('Installing Scons...')
 	dir_name = file_name[:-7]
@@ -61,5 +63,5 @@ def test1():
 	print(PYTHON_HOME)
 
 if __name__ == '__main__':
-	test1()
+	test()
 
