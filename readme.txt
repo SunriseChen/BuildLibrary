@@ -93,21 +93,21 @@ Finished processing dependencies for scons
 有 git, svn, msvc / gcc / ... 并可直接执行（有 path 环境）或通过搜索得到路径
 
 1. 主流程：
-a. 下载 easy_lib_setup.py 到 .../lib/easy_lib/ 下面
-b. 执行 python easy_lib_setup.py
-   自动下载并设置 easy_lib
+a. 下载 bl_setup.py 到 .../lib/build_lib/ 下面
+b. 执行 python bl_setup.py
+   自动下载并设置 build_lib
    自动下载并安装 setuptools 和 scons
-c. 执行 python easy_lib.py lib1 lib2 ...
-   自动下载、构建、安装、更新、清理各个 lib，并自动管理依赖关系
+c. 执行 python build.py lib1 lib2 ...
+   自动发现、下载、构建、安装、更新、清理各个 lib，并自动管理依赖关系
 
 2. 各 lib 流程：
-a. 自动发现最新稳定版本或者通过 lib_resources 指定
+a. 自动发现最新稳定版本或者通过 library_info 指定
 b. 比较当前 lib 版本和目标 lib 版本是否一致
 c. 下载指定版本的 lib 包
 d. 解包、构建
 e. 安装、清理
 
-3. 设置(local_settings.py + local_settings.py.default)：
+3. 设置(settings.py + settings.py.default)：
 a. 全局
 b. lib 局部
 c. sub_lib 局部
@@ -120,21 +120,26 @@ e. 构建参数：
    mt / md
    msvc / gcc / ...
 f. 生成的库：
-   STLPort
+   STLport
    ZLib
    OpenSSL
    Boost
 
-4. 库的数据(lib_resources.py + lib_resources/*)：
-a. lib 库(lib_resources/lib_name.py 或 lib_resources/lib_name/*)
-b. sub_lib 库(lib_resources/lib_name/sub_lib_name.py 或 lib_resources/lib_name/sub_lib_name/*)
+4. 库的数据(library_info.py + library_info/*)：
+a. lib 库(library_info/lib_name.py + library_info/lib_name/*)
+b. sub_lib 库(library_info/lib_name/sub_lib_name.py + library_info/lib_name/sub_lib_name/*)
 
 5. 相关文件：
 readme.txt
-easy_lib_setup.py
-local_settings.py.default
-local_settings.py
-lib_resources.py
-lib_resources/*
-easy_lib.py
+bl_setup.py
+settings.py.default
+settings.py
+library_info.py
+library_info/*
+build.py
+
+6. 关键功能
+a. 下载
+b. 自动发现程序
+c. 自动发现最新稳定版本
 
