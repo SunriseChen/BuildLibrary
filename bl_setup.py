@@ -85,8 +85,9 @@ def unpack_file(file_name, target_dir=os.curdir):
 		with tarfile.open(file_name) as tar_file:
 			tar_file.extractall(target_dir)
 	elif zipfile.is_zipfile(file_name):
-		with zipfile.ZipFile(file_name) as zip_file:
-			zip_file.extractall(target_dir)
+		zip_file = zipfile.ZipFile(file_name)
+		zip_file.extractall(target_dir)
+		zip_file.close()
 	else:
 		print('Pack file format is unknow. unpack fail!')
 		sys.exit(1)
