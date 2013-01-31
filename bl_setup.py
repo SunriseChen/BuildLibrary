@@ -2,12 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import os, sys, shutil
-#import subprocess
+import subprocess
 
 DEFAULT_VERSION = '0.1.0'
 DEFAULT_URL     = 'https://github.com/SunriseChen/BuildLibrary/archive/master.zip'
 FILE_DIGEST = ''
 PACK_FILE_ROOT_DIR = 'BuildLibrary-master'
+
+SETUPTOOLS_URL = 'http://peak.telecommunity.com/dist/ez_setup.py'
 
 
 def download_file(url, target_dir=os.curdir):
@@ -121,6 +123,10 @@ def build_lib_setup():
 	move_files(PACK_FILE_ROOT_DIR, os.curdir, shutil.ignore_patterns('.git*'))
 	shutil.rmtree(PACK_FILE_ROOT_DIR)
 	os.remove(file_name)
+
+	setuptools = download_file(SETUPTOOLS_URL)
+	subprocess.call(['python', setuptools])
+	subprocess.call(['easy_install', 'scons'])
 
 
 if __name__ == '__main__':
