@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import os, sys, shutil
-import subprocess
 
 DEFAULT_VERSION = '0.1.0'
 DEFAULT_URL     = 'https://github.com/SunriseChen/BuildLibrary/archive/master.zip'
@@ -125,7 +124,10 @@ def build_lib_setup():
 	os.remove(file_name)
 
 	setuptools = download_file(SETUPTOOLS_URL)
-	subprocess.call(['python', setuptools])
+	import ez_setup
+	ez_setup.use_setuptools()
+
+	import subprocess
 	subprocess.call(['easy_install', 'scons'])
 
 
