@@ -3,7 +3,7 @@
 
 from distutils.core import setup
 
-dist = setup(
+setup(
 		name='STLport',
 		version='5.2.1',
 		#scripts=['.py'],
