@@ -8,7 +8,7 @@ from distutils.core import run_setup
 
 def make_lib_info():
 	libs = []
-	for root, dirs, files in os.walk('library_info'):
+	for root, dirs, files in os.walk('lib_info'):
 		for f in files:
 			lib_name, ext = os.path.splitext(f)
 			if ext.lower() == '.py' and not lib_name.lower().endswith('__init__'):
