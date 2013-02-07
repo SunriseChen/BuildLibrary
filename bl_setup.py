@@ -5,7 +5,7 @@ import os, sys, shutil
 
 DEFAULT_VERSION = '0.1.0'
 DEFAULT_URL     = 'https://github.com/SunriseChen/BuildLibrary/archive/master.zip'
-FILE_DIGEST = ''
+FILE_DIGEST = None
 PACK_FILE_ROOT_DIR = 'BuildLibrary-master'
 
 SETUPTOOLS_URL = 'http://peak.telecommunity.com/dist/ez_setup.py'
@@ -17,6 +17,8 @@ def download_file(url, target_dir=os.curdir):
 	print('Downloading url: ' + url)
 	remote_file = urlopen(url)
 
+	if not os.path.exists(target_dir):
+		os.makedirs(target_dir)
 	file_name = os.path.basename(url)
 	file_path = os.path.join(target_dir, file_name)
 	with open(file_path, 'wb') as local_file:
@@ -28,38 +30,48 @@ def download_file(url, target_dir=os.curdir):
 	return os.path.realpath(file_path)
 
 
-def validate_md5(data, digest):
+def get_md5(data):
+	hash_data = None
 	try:
 		# Python version >= 2.5
 		from hashlib import md5
 	except ImportError:
 		# Python version < 2.5
 		from md5 import md5
+	hash_data = md5(data)
 
-	return (digest == md5(data).hexdigest())
+	return hash_data
 
 
-def validate_sha1(data, digest):
-	sha1 = None
+def get_sha1(data):
+	hash_data = None
 	try:
 		# Python version >= 2.5
 		import hashlib
-		sha1 = hashlib.sha1(data)
+		hash_data = hashlib.sha1(data)
 	except ImportError:
 		# Python version < 2.5
 		import sha
-		sha1 = sha.new(data)
+		hash_data = sha.new(data)
 
-	return (digest == sha1.hexdigest())
+	return hash_data
 
 
 def validate_file(file_name, file_digest):
+	if file_digest is None:
+		return True
+
 	with open(file_name, 'rb') as file_data:
 		digest_len = len(file_digest)
+		hash_data = None
 		if digest_len == 32:
-			return validate_md5(file_data.read(), file_digest)
+			hash_data = get_md5(file_data.read())
 		elif digest_len == 40:
-			return validate_sha1(file_data.read(), file_digest)
+			hash_data = get_sha1(file_data.read())
+		if hash_data:
+			print(file_digest)
+			print(hash_data.hexdigest())
+			return (file_digest == hash_data.hexdigest())
 
 	return False
 
@@ -114,8 +126,7 @@ def move_files(src_dir, dst_dir, ignore=None):
 
 
 def build_lib_setup():
-	#file_name = download_and_validate(DEFAULT_URL, FILE_DIGEST)
-	file_name = download_file(DEFAULT_URL)
+	file_name = download_and_validate(DEFAULT_URL, FILE_DIGEST)
 	if file_name is None:
 		sys.exit(1)
 	unpack_dir = unpack_file(file_name)
