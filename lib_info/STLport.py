@@ -30,4 +30,5 @@ def add_lib_info(lib_info):
 
 		download_url='http://sourceforge.net/projects/stlport/files/STLport/STLport-5.2.1/STLport-5.2.1.tar.bz2',
 		file_digest='a8341363e44d9d06a60e03215b38ddde',
+		dependency_links=['http://sourceforge.net/projects/stlport/'],
 	)
