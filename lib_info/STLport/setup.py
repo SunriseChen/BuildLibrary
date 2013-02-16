@@ -16,5 +16,5 @@ setup(
 	license='Other License',
 	url='http://stlport.org',
 
-	download_url='http://sourceforge.net/projects/stlport/files/STLport/STLport-5.2.1/STLport-5.2.1.tar.bz2',
+	download_url='http://sourceforge.net/projects/stlport/files/STLport/STLport-5.2.1/STLport-5.2.1.tar.bz2#md5=a8341363e44d9d06a60e03215b38ddde',
 )
