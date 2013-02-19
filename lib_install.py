@@ -5,13 +5,11 @@ from ez_setup import use_setuptools
 use_setuptools()
 
 import os, sys, tempfile
-from glob import glob
-from setuptools import setup
-from setuptools.command.easy_install import easy_install, main, rmtree, parse_requirement_arg
-from setuptools.package_index import PackageIndex, URL_SCHEME
+from setuptools.command.easy_install import *
+from setuptools.command.easy_install import rmtree, parse_requirement_arg
+from setuptools.package_index import URL_SCHEME
 from distutils import log
 from distutils.errors import *
-from setuptools.archive_util import unpack_archive
 from pkg_resources import *
 
 LIB_INFO_DIR = 'lib_info'
@@ -27,12 +25,13 @@ class lib_install(easy_install):
 	def finalize_options(self):
 		try:
 			easy_install.finalize_options(self)
-			if self.pth_file:
-				instdir = normalize_path(self.install_dir)
-				self.pth_file.filename = os.path.join(instdir, 'lib-install.pth')
 		except DistutilsArgError:
 			if not self.args:
 				print('self update')
+
+		if self.pth_file:
+			instdir = normalize_path(self.install_dir)
+			self.pth_file.filename = os.path.join(instdir, 'lib-install.pth')
 
 	def easy_install(self, spec, deps=False):
 		self.lib_install(spec, deps)
@@ -78,6 +77,8 @@ class lib_install(easy_install):
 		finally:
 			if os.path.exists(tmpdir):
 				rmtree(tmpdir)
+			if dist:
+				self.clean_build_files(dist.project_name)
 
 	def generate_setup(self, dist, setup_base):
 		src_file = os.path.join(LIB_INFO_DIR, dist.project_name, 'setup.py')
@@ -90,6 +91,21 @@ class lib_install(easy_install):
 					)
 					dst.write(line)
 		return setup_script
+
+	def clean_build_files(self, project_name):
+		setup_base = os.path.join(self.build_directory, project_name)
+		paths = [
+			os.path.join(setup_base, 'temp'),
+			os.path.join(setup_base, 'build'),
+			os.path.join(setup_base, project_name + '.egg-info'),
+			os.path.join(setup_base, 'setup.py'),
+		]
+		for path in paths:
+			if os.path.exists(path):
+				if os.path.isfile(path):
+					os.remove(path)
+				elif os.path.isdir(path):
+					rmtree(path)
 
 
 def _main():
