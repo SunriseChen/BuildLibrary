@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>7ab935be-6bd8-447c-849d-eb858d34b3c8</ProjectGuid>
+    <ProjectHome>
+    </ProjectHome>
+    <StartupFile>lib_install.py</StartupFile>
+    <SearchPath>
+    </SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <InterpreterId>9a7a9026-48c1-4688-9d5d-e5699d47d074</InterpreterId>
+    <InterpreterVersion>2.7</InterpreterVersion>
+    <Name>BuildLibrary</Name>
+    <RootNamespace>BuildLibrary</RootNamespace>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <CommandLineArguments>stlport</CommandLineArguments>
+    <InterpreterPath />
+    <InterpreterArguments />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="bl_setup.py" />
+    <Compile Include="build.py" />
+    <Compile Include="command.py" />
+    <Compile Include="download.py" />
+    <Compile Include="lib_install.py" />
+    <Compile Include="settings.py" />
+    <Compile Include="lib_info\STLport\setup.py" />
+    <Content Include="readme.txt" />
+    <Content Include="lib_info\STLport\index.html" />
+    <Content Include="lib_info\STLport\index.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="lib_info\" />
+    <Folder Include="lib_info\STLport" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
+</Project>
