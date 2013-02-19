@@ -81,12 +81,14 @@ class lib_install(easy_install):
 				self.clean_build_files(dist.project_name)
 
 	def generate_setup(self, dist, setup_base):
+		from string import Template
+
 		src_file = os.path.join(LIB_INFO_DIR, dist.project_name, 'setup.py')
 		setup_script = os.path.join(setup_base, 'setup.py')
 		with open(setup_script, 'w') as dst:
 			with open(src_file) as src:
 				for line in src:
-					line = line.format(
+					line = Template(line).safe_substitute(
 						version=dist.version,
 					)
 					dst.write(line)
