@@ -22,11 +22,14 @@ class lib_install(easy_install):
 	def initialize_options(self):
 		easy_install.initialize_options(self)
 		self.index_url = 'file:' + LIB_INFO_DIR
-		#self.find_links = 'file:lib_info/index.html'
+		self.build_directory = '..'
 
 	def finalize_options(self):
 		try:
 			easy_install.finalize_options(self)
+			if self.pth_file:
+				instdir = normalize_path(self.install_dir)
+				self.pth_file.filename = os.path.join(instdir, 'lib-install.pth')
 		except DistutilsArgError:
 			if not self.args:
 				print('self update')
