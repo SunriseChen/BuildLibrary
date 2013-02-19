@@ -170,3 +170,4 @@ pip-log.txt
 download/
 unpack/
 /local_settings.py
+/ez_setup.py

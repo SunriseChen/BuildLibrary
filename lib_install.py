@@ -28,10 +28,12 @@ def download_file(url, target_dir=os.curdir):
 
 def install_setuptools():
 	print('install setuptools...')
-	download_file(EZ_SETUP_URL)
-	import ez_setup
-	ez_setup.main([])
-	import setuptools
+	ez_setup = download_file(EZ_SETUP_URL)
+	import subprocess
+	subprocess.call(['python', ez_setup])
+	import site
+	for path in site.getsitepackages():
+		site.addsitedir(path)
 
 
 try:
