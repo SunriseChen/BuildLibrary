@@ -287,6 +287,8 @@ def move_files(src_dir, dst_dir, ignore=None):
 	else:
 		ignored_names = set()
 
+	if not os.path.exists(dst_dir):
+		os.makedirs(dst_dir)
 	for name in names:
 		if name in ignored_names:
 			continue
