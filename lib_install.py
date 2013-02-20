@@ -320,12 +320,11 @@ def update_self():
 	download = package_index.download(DEFAULT_URL, tmpdir)
 	print('Downloaded.')
 	unpack_archive(download, tmpdir)
-	print('Unpacked.')
 	unpack_dir = os.path.join(tmpdir, PACK_FILE_ROOT_DIR)
-	print(unpack_dir)
 	move_files(unpack_dir, os.curdir, shutil.ignore_patterns('.git*'))
 	shutil.rmtree(tmpdir)
-	sys.exit()
+	reload(lib_install)
+	print('Self updated.')
 
 
 def _main():
