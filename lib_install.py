@@ -293,9 +293,15 @@ def move_files(src_dir, dst_dir, ignore=None):
 		src_name = os.path.join(src_dir, name)
 		dst_name = os.path.join(dst_dir, name)
 		if os.path.islink(src_name):
+			if os.path.isfile(dst_name):
+				os.remove(dst_name)
+			elif os.path.isdir(dst_name):
+				shutil.rmtree(dst_name)
 			linkto = os.readlink(src_name)
 			os.symlink(linkto, dst_name)
 		elif os.path.isdir(src_name):
+			if os.path.isfile(dst_name) or os.path.islink(dst_name):
+				os.remove(dst_name)
 			move_files(src_name, dst_name, ignore)
 		else:
 			if os.path.islink(dst_name):
