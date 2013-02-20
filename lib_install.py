@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os, sys, tempfile
+import os, sys, subprocess, tempfile
 
 EZ_SETUP_URL = 'http://peak.telecommunity.com/dist/ez_setup.py'
 LIB_INFO_DIR = 'lib_info'
@@ -26,28 +26,97 @@ def download_file(url, target_dir=os.curdir):
 	return os.path.realpath(file_path)
 
 
-def install_setuptools():
-	print('install setuptools...')
-	ez_setup = download_file(EZ_SETUP_URL)
-	import subprocess
-	subprocess.call(['python', ez_setup])
+def update_python_path():
 	import site
+
 	for path in site.getsitepackages():
 		site.addsitedir(path)
 
 
-try:
-	import setuptools
-except ImportError:
-	install_setuptools()
+def install_setuptools():
+	print('Install setuptools...')
+	ez_setup = download_file(EZ_SETUP_URL)
+	subprocess.call(['python', ez_setup])
+	update_python_path()
+
+
+def check_setuptools(times=3):
+	for i in range(times):
+		try:
+			import setuptools
+			break
+		except ImportError:
+			install_setuptools()
+	else:
+		print('Install setuptools fail!')
+		sys.exit(1)
+
+
+def install_scons():
+	print('Install SCons...')
+	subprocess.call(['easy_install', 'SCons'])
+	update_python_path()
+
+
+def check_scons(times=3):
+	import re
+
+	for i in range(times):
+		try:
+			output = subprocess.check_output(['scons', '-v'], stderr=subprocess.STDOUT, shell=True)
+			m = re.search(r"engine path: \['(?P<path>.+)SCons'\]", output)
+			if m and m.group('path'):
+				path = os.path.normpath(m.group('path'))
+				sys.path.insert(0, path)
+			import SCons
+			break
+		except subprocess.CalledProcessError, ImportError:
+			install_scons()
+	else:
+		print('Install SCons fail!')
+		sys.exit(1)
+
+
+def init():
+	check_setuptools()
+	check_scons()
+
+
+def show_sys_vars():
+	print('os.name = %s, sys.platform = %s' % (os.name, sys.platform))
+
+	from distutils import util, ccompiler
+	print('platform = %s' % util.get_platform())
+	print('compiler = %s' % ccompiler.get_default_compiler(os.name, sys.platform))
+
+	from SCons.Environment import Environment
+	env = Environment()
+	vars = [
+		'CC',
+		'CXX',
+		'PLATFORM',
+		'MSVC_VERSION',
+		'TARGET_ARCH',
+		'MSVS',
+		'MSVS_VERSION',
+		'MSVS_ARCH',
+		'TOOLS',
+	]
+	for var in vars:
+		print('%s = %r' % (var, env.subst('$' + var)))
+
+
+init()
+#show_sys_vars()
+#exit()
 
 
 from setuptools.command.easy_install import *
 from setuptools.command.easy_install import rmtree, parse_requirement_arg
 from setuptools.package_index import URL_SCHEME
+from pkg_resources import *
 from distutils import log
 from distutils.errors import *
-from pkg_resources import *
 
 
 class lib_install(easy_install):
@@ -205,16 +274,17 @@ class lib_install(easy_install):
 
 
 def _main():
-	#try:
+	try:
 		main(
 			cmdclass={
 				'easy_install': lib_install,
 			},
 		)
-	#except AttributeError:
-	#	log.warn('Library is not supported.')
-	#except Exception as e:
-	#	log.warn(e)
+	except AttributeError:
+		log.warn('Library is not supported.')
+	except Exception as e:
+		log.warn(e)
+		raise
 
 
 if __name__ == '__main__':
