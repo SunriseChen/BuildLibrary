@@ -1,7 +1,11 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os, sys, subprocess, tempfile
+import os, sys, subprocess, tempfile, shutil
+
+DEFAULT_VERSION = '0.1.0'
+DEFAULT_URL     = 'https://github.com/SunriseChen/BuildLibrary/archive/master.zip'
+PACK_FILE_ROOT_DIR = 'BuildLibrary-master'
 
 EZ_SETUP_URL = 'http://peak.telecommunity.com/dist/ez_setup.py'
 LIB_INFO_DIR = 'lib_info'
@@ -77,7 +81,7 @@ def check_scons(times=3):
 		sys.exit(1)
 
 
-def init():
+def check_env():
 	check_setuptools()
 	check_scons()
 
@@ -106,7 +110,7 @@ def show_sys_vars():
 		print('%s = %r' % (var, env.subst('$' + var)))
 
 
-init()
+check_env()
 #show_sys_vars()
 #exit()
 
@@ -118,6 +122,8 @@ from pkg_resources import *
 from distutils import log
 from distutils.errors import *
 
+from setuptools.package_index import PackageIndex
+from setuptools.archive_util import unpack_archive
 
 class lib_install(easy_install):
 
@@ -131,7 +137,8 @@ class lib_install(easy_install):
 			easy_install.finalize_options(self)
 		except DistutilsArgError:
 			if not self.args:
-				print('self update')
+				print('self updated.')
+				sys.exit()
 
 		if self.pth_file:
 			instdir = normalize_path(self.install_dir)
@@ -273,8 +280,39 @@ class lib_install(easy_install):
 					rmtree(path)
 
 
+def move_files(src_dir, dst_dir, ignore=None):
+	names = os.listdir(src_dir)
+	if ignore is not None:
+		ignored_names = ignore(src_dir, names)
+	else:
+		ignored_names = set()
+
+	for name in names:
+		if name in ignored_names:
+			continue
+		src_name = os.path.join(src_dir, name)
+		dst_name = os.path.join(dst_dir, name)
+		shutil.move(src_name, dst_name)
+
+
+def update_self():
+	package_index = PackageIndex()
+	tmpdir = tempfile.mkdtemp(prefix="lib_install-")
+	print('Downloading %s' % DEFAULT_URL)
+	download = package_index.download(DEFAULT_URL, tmpdir)
+	print('Downloaded.')
+	unpack_archive(download, tmpdir)
+	print('Unpacked.')
+	unpack_dir = os.path.join(tmpdir, PACK_FILE_ROOT_DIR)
+	print(unpack_dir)
+	move_files(unpack_dir, os.curdir, shutil.ignore_patterns('.git*'))
+	shutil.rmtree(tmpdir)
+	sys.exit()
+
+
 def _main():
 	try:
+		update_self()
 		main(
 			cmdclass={
 				'easy_install': lib_install,
