@@ -320,7 +320,8 @@ def update_self():
 	print('Downloaded.')
 	unpack_archive(download, tmpdir)
 	unpack_dir = os.path.join(tmpdir, PACK_FILE_ROOT_DIR)
-	move_update_files(unpack_dir, os.curdir, shutil.ignore_patterns(['.git*', '*.sln', '*.pyproj']))
+	move_update_files(unpack_dir, os.curdir,
+		shutil.ignore_patterns(['.git*', '*.sln', '*.pyproj']))
 	shutil.rmtree(tmpdir)
 	print('Self updated.')
 
