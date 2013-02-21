@@ -81,11 +81,6 @@ def check_scons(times=3):
 		sys.exit(1)
 
 
-def check_env():
-	check_setuptools()
-	check_scons()
-
-
 def show_sys_vars():
 	print('os.name = %s, sys.platform = %s' % (os.name, sys.platform))
 
@@ -110,20 +105,20 @@ def show_sys_vars():
 		print('%s = %r' % (var, env.subst('$' + var)))
 
 
+def check_env():
+	check_setuptools()
+	check_scons()
+
+
 check_env()
 #show_sys_vars()
 #exit()
 
 
 from setuptools.command.easy_install import *
-from setuptools.command.easy_install import rmtree, parse_requirement_arg
-from setuptools.package_index import URL_SCHEME
+from setuptools.command.easy_install import rmtree
 from pkg_resources import *
-from distutils import log
 from distutils.errors import *
-
-from setuptools.package_index import PackageIndex
-from setuptools.archive_util import unpack_archive
 
 class lib_install(easy_install):
 
@@ -137,7 +132,7 @@ class lib_install(easy_install):
 			easy_install.finalize_options(self)
 		except DistutilsArgError:
 			if not self.args:
-				print('self updated.')
+				# self updated.
 				sys.exit()
 
 		if self.pth_file:
@@ -148,6 +143,9 @@ class lib_install(easy_install):
 		return self.lib_install(spec, deps)
 
 	def lib_install(self, spec, deps):
+		from setuptools.command.easy_install import parse_requirement_arg
+		from setuptools.package_index import URL_SCHEME
+
 		tmpdir = tempfile.mkdtemp(prefix="lib_install-")
 		download = None
 		if not self.editable: self.install_site_py()
@@ -190,65 +188,6 @@ class lib_install(easy_install):
 				rmtree(tmpdir)
 			if dist:
 				self.clean_build_files(dist.project_name)
-
-	def install_item(self, spec, download, tmpdir, deps, install_needed=False):
-
-		# Installation is also needed if file in tmpdir or is not an egg
-		install_needed = install_needed or self.always_copy
-		install_needed = install_needed or os.path.dirname(download) == tmpdir
-		install_needed = install_needed or not download.endswith('.egg')
-		install_needed = install_needed or (
-			self.always_copy_from is not None and
-			os.path.dirname(normalize_path(download)) ==
-			normalize_path(self.always_copy_from)
-		)
-
-		if spec and not install_needed:
-			# at this point, we know it's a local .egg, we just don't know if
-			# it's already installed.
-			for dist in self.local_index[spec.project_name]:
-				if dist.location==download:
-					break
-			else:
-				install_needed = True   # it's not in the local index
-
-		log.info("Processing %s", os.path.basename(download))
-
-		if install_needed:
-			dists = self.install_eggs(spec, download, tmpdir)
-			for dist in dists:
-				self.process_distribution(spec, dist, deps)
-		else:
-			dists = [self.check_conflicts(self.egg_distribution(download))]
-			self.process_distribution(spec, dists[0], deps, "Using")
-
-		if spec is not None:
-			for dist in dists:
-				if dist in spec:
-					return dist
-
-	def run_setup(self, setup_script, setup_base, args):
-		from setuptools.command import bdist_egg, egg_info
-		from setuptools.sandbox import run_setup
-
-		sys.modules.setdefault('distutils.command.bdist_egg', bdist_egg)
-		sys.modules.setdefault('distutils.command.egg_info', egg_info)
-
-		args = list(args)
-		if self.verbose>2:
-			v = 'v' * (self.verbose - 1)
-			args.insert(0,'-'+v)
-		elif self.verbose<2:
-			args.insert(0,'-q')
-		if self.dry_run:
-			args.insert(0,'-n')
-		log.info(
-			"Running %s %s", setup_script[len(setup_base)+1:], ' '.join(args)
-		)
-		try:
-			run_setup(setup_script, args)
-		except SystemExit, v:
-			raise DistutilsError("Setup script exited with %s" % (v.args[0],))
 
 	def generate_setup(self, dist, setup_base):
 		from string import Template
@@ -314,6 +253,9 @@ def move_update_files(src_dir, dst_dir, ignore=None):
 
 
 def update_self():
+	from setuptools.package_index import PackageIndex
+	from setuptools.archive_util import unpack_archive
+
 	tmpdir = tempfile.mkdtemp(prefix="lib_install-")
 	print('Downloading %s' % DEFAULT_URL)
 	download = PackageIndex().download(DEFAULT_URL, tmpdir)
@@ -327,6 +269,8 @@ def update_self():
 
 
 def _main():
+	from distutils import log
+
 	if len(sys.argv) > 1 and sys.argv[1] == '--updated':
 		try:
 			main(

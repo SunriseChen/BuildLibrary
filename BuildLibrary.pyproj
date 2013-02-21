@@ -29,10 +29,6 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="bl_setup.py" />
-    <Compile Include="build.py" />
-    <Compile Include="command.py" />
-    <Compile Include="download.py" />
     <Compile Include="lib_install.py" />
     <Compile Include="settings.py" />
     <Compile Include="lib_info\STLport\setup.py" />

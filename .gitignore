@@ -167,7 +167,4 @@ pip-log.txt
 ## BuildLibrary
 #############
 
-download/
-unpack/
-/local_settings.py
 /ez_setup.py
