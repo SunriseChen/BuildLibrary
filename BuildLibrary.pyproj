@@ -16,7 +16,7 @@
     <Name>BuildLibrary</Name>
     <RootNamespace>BuildLibrary</RootNamespace>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>stlport</CommandLineArguments>
+    <CommandLineArguments>--updated stlport</CommandLineArguments>
     <InterpreterPath />
     <InterpreterArguments />
   </PropertyGroup>

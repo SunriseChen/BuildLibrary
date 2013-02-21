@@ -151,6 +151,7 @@ class lib_install(easy_install):
 		if not self.editable: self.install_site_py()
 
 		try:
+			dist = None
 			if not isinstance(spec, Requirement):
 				if URL_SCHEME(spec):
 					# It's a url, download it to tmpdir and process
