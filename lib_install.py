@@ -314,14 +314,13 @@ def move_update_files(src_dir, dst_dir, ignore=None):
 
 
 def update_self():
-	package_index = PackageIndex()
 	tmpdir = tempfile.mkdtemp(prefix="lib_install-")
 	print('Downloading %s' % DEFAULT_URL)
-	download = package_index.download(DEFAULT_URL, tmpdir)
+	download = PackageIndex().download(DEFAULT_URL, tmpdir)
 	print('Downloaded.')
 	unpack_archive(download, tmpdir)
 	unpack_dir = os.path.join(tmpdir, PACK_FILE_ROOT_DIR)
-	move_update_files(unpack_dir, os.curdir, shutil.ignore_patterns('.git*'))
+	move_update_files(unpack_dir, os.curdir, shutil.ignore_patterns(['.git*', '*.sln', '*.pyproj']))
 	shutil.rmtree(tmpdir)
 	print('Self updated.')
 
