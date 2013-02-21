@@ -29,15 +29,18 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="lib_info\Boost\setup.py" />
     <Compile Include="lib_install.py" />
     <Compile Include="settings.py" />
     <Compile Include="lib_info\STLport\setup.py" />
+    <Content Include="lib_info\Boost\index.html" />
     <Content Include="readme.txt" />
     <Content Include="lib_info\STLport\index.html" />
     <Content Include="lib_info\STLport\index.html" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="lib_info\" />
+    <Folder Include="lib_info\Boost\" />
     <Folder Include="lib_info\STLport" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
