@@ -280,7 +280,7 @@ class lib_install(easy_install):
 					rmtree(path)
 
 
-def move_files(src_dir, dst_dir, ignore=None):
+def move_update_files(src_dir, dst_dir, ignore=None):
 	names = os.listdir(src_dir)
 	if ignore is not None:
 		ignored_names = ignore(src_dir, names)
@@ -304,7 +304,7 @@ def move_files(src_dir, dst_dir, ignore=None):
 		elif os.path.isdir(src_name):
 			if os.path.isfile(dst_name) or os.path.islink(dst_name):
 				os.remove(dst_name)
-			move_files(src_name, dst_name, ignore)
+			move_update_files(src_name, dst_name, ignore)
 		else:
 			if os.path.islink(dst_name):
 				os.remove(dst_name)
@@ -321,25 +321,29 @@ def update_self():
 	print('Downloaded.')
 	unpack_archive(download, tmpdir)
 	unpack_dir = os.path.join(tmpdir, PACK_FILE_ROOT_DIR)
-	move_files(unpack_dir, os.curdir, shutil.ignore_patterns('.git*'))
+	move_update_files(unpack_dir, os.curdir, shutil.ignore_patterns('.git*'))
 	shutil.rmtree(tmpdir)
-	reload(lib_install)
 	print('Self updated.')
 
 
 def _main():
-	try:
+	if len(sys.argv) > 1 and sys.argv[1] == '--updated':
+		try:
+			main(
+				sys.argv[2:],
+				cmdclass={
+					'easy_install': lib_install,
+				},
+			)
+		except AttributeError:
+			log.warn('Library is not supported.')
+		except Exception as e:
+			log.warn(e)
+			raise
+	else:
 		update_self()
-		main(
-			cmdclass={
-				'easy_install': lib_install,
-			},
-		)
-	except AttributeError:
-		log.warn('Library is not supported.')
-	except Exception as e:
-		log.warn(e)
-		raise
+		sys.argv.insert(1, '--updated')
+		subprocess.call(sys.argv, shell=True)
 
 
 if __name__ == '__main__':
