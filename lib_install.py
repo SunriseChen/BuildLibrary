@@ -199,7 +199,6 @@ class lib_install(easy_install):
 			with open(src_file) as src:
 				for line in src:
 					line = Template(line).safe_substitute(
-						lib_install_path=os.path.abspath(os.curdir),
 						version=dist.version,
 					)
 					dst.write(line)
@@ -265,7 +264,7 @@ def update_self():
 	unpack_archive(download, tmpdir)
 	unpack_dir = os.path.join(tmpdir, PACK_FILE_ROOT_DIR)
 	move_update_files(unpack_dir, os.curdir,
-		shutil.ignore_patterns('.git*', '*.sln', '*.pyproj'))
+		shutil.ignore_patterns('.git*', '*.sln', '*.pyproj', '*.sample'))
 	shutil.rmtree(tmpdir)
 	print('Self updated.')
 

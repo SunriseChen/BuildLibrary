@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import os, sys, subprocess, shutil
-sys.path.insert(0, r'$lib_install_path')
 
 
 def add_msvc2010_support(base_dir):
@@ -31,7 +30,7 @@ def pre_process():
 	print('Install STLport...')
 	os.chdir('STLport-$version')
 	add_msvc2010_support(os.path.abspath(os.curdir))
-	subprocess.call(['configure', 'msvc9', '--with-static-rtl', '--with-dynamic-rtl'])
+	subprocess.call(['configure.bat', 'msvc9', '--with-static-rtl', '--with-dynamic-rtl'])
 	os.chdir('build/lib')
 	subprocess.call(['nmake', 'clean', 'install'])
 	shutil.rmtree('obj')
