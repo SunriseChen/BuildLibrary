@@ -1,14 +1,17 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-def add_msvc2010_support():
-	pass
+import os, sys, subprocess, shutil
 
 
 def pre_process():
-	print('pre process.')
-	print('I\'m Boost.')
+	print('Install Boost...')
+	print('$filename')
+	os.chdir('$filename')
+	subprocess.call(['bootstrap.bat'])
+	subprocess.call(['b2.exe'])
+	shutil.rmtree('bin.v2')
+	os.chdir('..')
 
 
 def post_process():

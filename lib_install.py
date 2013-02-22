@@ -197,9 +197,12 @@ class lib_install(easy_install):
 		setup_script = os.path.join(setup_base, 'setup.py')
 		with open(setup_script, 'w') as dst:
 			with open(src_file) as src:
+				filename, ext = os.path.splitext(dist.location)
+				filename = os.path.basename(filename)
 				for line in src:
 					line = Template(line).safe_substitute(
 						version=dist.version,
+						filename=filename,
 					)
 					dst.write(line)
 		return setup_script
