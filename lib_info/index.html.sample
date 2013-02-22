@@ -3,7 +3,7 @@
 <p>本文件格式需要使用 Unix 的文件格式（以“\n”作为换行符），而不能使用 Windows 的文件格式（以“\r\n”作为换行符），原因在于下面这种格式的匹配模式由 setuptools 写死了，除非修改 setuptools 的匹配模式。</p>
 <a href="http://sourceforge.net/projects/stlport/files/STLport/STLport-5.2.1/STLport-5.2.1.tar.bz2">STLport-5.2.1.tar.bz2</a>
 	(<a title="MD5 hash"
-		href="/?:action=show_md5&amp;digest=a8341363e44d9d06a60e03215b38ddde">md5</a>)<br/>
+		href="https://pypi.python.org/pypi?:action=show_md5&amp;digest=a8341363e44d9d06a60e03215b38ddde">md5</a>)<br/>
 <p>下面这种格式是最常用的格式，其中文件名使用“lib_name-version”模式进行识别，支持文件格式有：“.tar.gz”、“.tar.bz2”、“.tar”、“.zip”、“.tgz”等，其中“#md5=”用于下载后校验。</p>
 <a href="http://sourceforge.net/projects/stlport/files/STLport/STLport-5.2.0/STLport-5.2.0.tar.bz2#md5=448d74859407912c0087adcf51bf109a">STLport-5.2.0.tar.bz2</a><br/>
 <p>下面这种格式用于由下载链接无法识别库及其版本时使用，这种格式暂时无法加入 MD5 校验。识别使用“#egg=lib_name-version”模式。</p>

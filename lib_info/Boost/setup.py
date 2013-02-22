@@ -2,16 +2,21 @@
 # -*- coding: utf-8 -*-
 
 
-def say_hello():
-	print('hello world!\nI\'m Boost.')
-
-
 def add_msvc2010_support():
 	pass
 
 
+def pre_process():
+	print('pre process.')
+	print('I\'m Boost.')
+
+
+def post_process():
+	print('post process.')
+
+
 def main():
-	say_hello()
+	pre_process()
 
 	from setuptools import setup
 	setup(
@@ -24,6 +29,8 @@ def main():
 		license='Boost Software License',
 		url='http://www.boost.org',
 	)
+
+	post_process()
 
 
 if __name__ == '__main__':
