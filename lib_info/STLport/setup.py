@@ -27,12 +27,33 @@ inline _STLP_LONG_LONG  abs(_STLP_LONG_LONG __x) { return __x < 0 ? -__x : __x; 
 
 
 def pre_process():
+	from common import Environment
+
 	print('Install STLport...')
 	os.chdir('STLport-$version')
-	add_msvc2010_support(os.path.abspath(os.curdir))
-	subprocess.call(['configure.bat', 'msvc9', '--with-static-rtl', '--with-dynamic-rtl'])
+
+	env = Environment()
+	config_command = ['configure', env.compiler, '--with-static-rtl', '--with-dynamic-rtl']
+	make_command = ['make', 'clean', 'install']
+
+	if env.platform == 'win32':
+		config_command[0] = 'configure.bat'
+		make_command[0] = 'nmake'
+		if env.compiler == 'msvc':
+			if float(env.compiler_version) > 9:
+				config_command[1] = 'msvc9'
+				add_msvc2010_support(os.path.abspath(os.curdir))
+			elif env.compiler_version[:3] == '7.1':
+				config_command[1] = 'msvc71'
+			else:
+				config_command[1] = env.compiler + env.compiler_version[0]
+	else:
+		config_command[0] = 'configure'
+		make_command[0] = 'make'
+
+	subprocess.call(config_command)
 	os.chdir('build/lib')
-	subprocess.call(['nmake', 'clean', 'install'])
+	subprocess.call(make_command)
 	shutil.rmtree('obj')
 	os.chdir('../../..')
 
