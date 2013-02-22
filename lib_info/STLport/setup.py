@@ -36,7 +36,7 @@ def pre_process():
 	config_command = ['configure', env.compiler, '--with-static-rtl', '--with-dynamic-rtl']
 	make_command = ['make', 'clean', 'install']
 
-	if env.platform == 'win32':
+	if env.platform[:3] == 'win':
 		config_command[0] = 'configure.bat'
 		make_command[0] = 'nmake'
 		if env.compiler == 'msvc':
