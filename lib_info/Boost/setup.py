@@ -6,8 +6,8 @@ import os, sys, subprocess, shutil
 
 def pre_process():
 	print('Install Boost...')
-	print('$filename')
-	os.chdir('$filename')
+	print('$directory')
+	os.chdir('$directory')
 	subprocess.call(['bootstrap.bat'])
 	subprocess.call(['b2.exe'])
 	shutil.rmtree('bin.v2')

@@ -11,6 +11,7 @@ EZ_SETUP_URL = 'http://peak.telecommunity.com/dist/ez_setup.py'
 LIB_INFO_DIR = 'lib_info'
 
 TEMP_DIR_PREFIX = 'lib_install-'
+PTH_FILE_NAME = 'lib-install.pth'
 
 
 def download_file(url, target_dir=os.curdir):
@@ -173,8 +174,24 @@ def show_sys_vars():
 		print('%s = %r' % (var, env.subst('$' + var)))
 
 
+def print_object(obj):
+	for item in obj.__dict__.items():
+		print('%s = %r' % item)
+
+
+def test():
+	from setuptools.package_index import distros_for_url
+
+	dists = distros_for_url('http://sourceforge.net/projects/boost/files/boost/1.53.0/boost_1_53_0.tar.bz2#egg=Boost-1.53.0')
+	for dist in dists:
+		print('========\n%r' % dist)
+		print_object(dist)
+		print_object(dist._provider)
+
+
 check_env()
 #show_sys_vars()
+#test()
 #exit()
 
 
@@ -182,7 +199,7 @@ from setuptools.command.easy_install import *
 from setuptools.command.easy_install import rmtree
 from pkg_resources import *
 from distutils import log
-from distutils.errors import *
+#from distutils.errors import *
 
 class lib_install(easy_install):
 
@@ -197,7 +214,7 @@ class lib_install(easy_install):
 
 		if self.pth_file:
 			instdir = normalize_path(self.install_dir)
-			self.pth_file.filename = os.path.join(instdir, 'lib-install.pth')
+			self.pth_file.filename = os.path.join(instdir, PTH_FILE_NAME)
 
 	def easy_install(self, spec, deps=False):
 		return self.lib_install(spec, deps)
@@ -257,12 +274,11 @@ class lib_install(easy_install):
 		setup_script = os.path.join(setup_base, 'setup.py')
 		with open(setup_script, 'w') as dst:
 			with open(src_file) as src:
-				filename, ext = os.path.splitext(dist.location)
-				filename = os.path.basename(filename)
+				directory = self.get_dist_directory(dist)
 				for line in src:
 					line = Template(line).safe_substitute(
 						version=dist.version,
-						filename=filename,
+						directory=directory,
 					)
 					dst.write(line)
 		return setup_script
@@ -281,6 +297,15 @@ class lib_install(easy_install):
 					os.remove(path)
 				elif os.path.isdir(path):
 					rmtree(path)
+
+	def get_dist_directory(self, dist):
+		from setuptools.package_index import egg_info_for_url, EXTENSIONS
+
+		basename, fragment = egg_info_for_url(dist.location)
+		for ext in EXTENSIONS:
+			if basename.endswith(ext):
+				basename = basename[:-len(ext)]
+				return basename
 
 
 def _main():
