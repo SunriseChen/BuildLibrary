@@ -10,6 +10,8 @@ PACK_FILE_ROOT_DIR = 'BuildLibrary-master'
 EZ_SETUP_URL = 'http://peak.telecommunity.com/dist/ez_setup.py'
 LIB_INFO_DIR = 'lib_info'
 
+TEMP_DIR_PREFIX = 'lib_install-'
+
 
 def download_file(url, target_dir=os.curdir):
 	import urllib2
@@ -122,7 +124,7 @@ def update_self():
 	from setuptools.package_index import PackageIndex
 	from setuptools.archive_util import unpack_archive
 
-	tmpdir = tempfile.mkdtemp(prefix="lib_install-")
+	tmpdir = tempfile.mkdtemp(prefix=TEMP_DIR_PREFIX)
 	print('Downloading %s' % DEFAULT_URL)
 	download = PackageIndex().download(DEFAULT_URL, tmpdir)
 	print('Downloaded.')
@@ -133,8 +135,12 @@ def update_self():
 	shutil.rmtree(tmpdir)
 	print('Self updated.')
 
-	sys.argv.insert(1, '--updated')
-	subprocess.call(sys.argv, shell=True)
+	if len(sys.argv) == 1:
+		# only update self.
+		sys.exit()
+	else:
+		sys.argv.insert(1, '--updated')
+		subprocess.call(sys.argv, shell=True)
 
 
 def check_env():
@@ -175,22 +181,19 @@ check_env()
 from setuptools.command.easy_install import *
 from setuptools.command.easy_install import rmtree
 from pkg_resources import *
+from distutils import log
 from distutils.errors import *
 
 class lib_install(easy_install):
 
 	def initialize_options(self):
 		easy_install.initialize_options(self)
+
 		self.index_url = 'file:' + LIB_INFO_DIR
 		self.build_directory = '..'
 
 	def finalize_options(self):
-		try:
-			easy_install.finalize_options(self)
-		except DistutilsArgError:
-			if not self.args:
-				# self updated.
-				sys.exit()
+		easy_install.finalize_options(self)
 
 		if self.pth_file:
 			instdir = normalize_path(self.install_dir)
@@ -203,7 +206,7 @@ class lib_install(easy_install):
 		from setuptools.command.easy_install import parse_requirement_arg
 		from setuptools.package_index import URL_SCHEME
 
-		tmpdir = tempfile.mkdtemp(prefix="lib_install-")
+		tmpdir = tempfile.mkdtemp(prefix=TEMP_DIR_PREFIX)
 		download = None
 		if not self.editable: self.install_site_py()
 
@@ -281,8 +284,6 @@ class lib_install(easy_install):
 
 
 def _main():
-	from distutils import log
-
 	try:
 		main(
 			cmdclass={
