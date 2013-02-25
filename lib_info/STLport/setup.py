@@ -30,15 +30,13 @@ def pre_process():
 	from common import Environment
 
 	print('Install STLport...')
-	os.chdir('STLport-$version')
+	os.chdir('$basename')
 
 	env = Environment()
-	config_command = ['configure', env.compiler, '--with-static-rtl', '--with-dynamic-rtl']
-	make_command = ['make', 'clean', 'install']
+	config_command = ['configure.bat', env.compiler, '--with-static-rtl', '--with-dynamic-rtl']
+	make_command = ['nmake', 'clean', 'install']
 
 	if env.platform[:3] == 'win':
-		config_command[0] = 'configure.bat'
-		make_command[0] = 'nmake'
 		if env.compiler == 'msvc':
 			if float(env.compiler_version) > 9:
 				config_command[1] = 'msvc9'
@@ -70,7 +68,7 @@ def main():
 		version='$version',
 
 		author='Petr Ovtchenkov',
-		author_email=' ',
+		author_email='support@stlport.com',
 		description='Multiplatform C++ Standard Library (STL implementation). Many compilers and operational environments supported. Standard (ISO/IEC 14882) compliance. Maximum efficiency. Exception and thread safety. Debug mode.',
 		license='Other License',
 		url='http://stlport.org',

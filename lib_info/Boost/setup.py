@@ -5,11 +5,21 @@ import os, sys, subprocess, shutil
 
 
 def pre_process():
+	from common import Environment
+
 	print('Install Boost...')
-	print('$basename')
 	os.chdir('$basename')
-	subprocess.call(['bootstrap.bat'])
-	subprocess.call(['b2.exe'])
+
+	env = Environment()
+	bootstrap_command = ['bootstrap.bat']
+	build_command = ['b2.exe']
+
+	if env.platform[:3] != 'win':
+		bootstrap_command = ['bootstrap.sh', '--prefix=/usr/local/']
+		build_command = ['b2', 'install']
+
+	subprocess.call(bootstrap_command)
+	subprocess.call(build_command)
 	shutil.rmtree('bin.v2')
 	os.chdir('..')
 
