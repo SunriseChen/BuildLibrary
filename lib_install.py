@@ -179,13 +179,26 @@ def print_object(obj):
 		print('%s = %r' % item)
 
 
+def get_dist_directory(dist):
+	from setuptools.package_index import egg_info_for_url, EXTENSIONS
+
+	basename, fragment = egg_info_for_url(dist.location)
+	for ext in EXTENSIONS:
+		if basename.endswith(ext):
+			basename = basename[:-len(ext)]
+			return os.path.basename(basename)
+
+
 def test():
 	from setuptools.package_index import distros_for_url
 
-	dists = distros_for_url('http://sourceforge.net/projects/boost/files/boost/1.53.0/boost_1_53_0.tar.bz2#egg=Boost-1.53.0')
+	dists = distros_for_url('http://sourceforge.net/projects/boost/files/boost/1.53.0/boost_1_53_0.tar.bz2%23egg=Boost-1.53.0#md5=a00d22605d5dbcfb4c9936a9b35bc4c2')
+	#dists = distros_for_url('http://sourceforge.net/projects/boost/files/boost/1.53.0/boost_1_53_0.tar.bz2#egg=Boost-1.53.0')
+	#dists = distros_for_url('file:C:\\sourceforge.net\\projects\\boost\\files\\boost\\1.53.0\\boost_1_53_0.tar.bz2#egg=Boost-1.53.0')
 	for dist in dists:
 		print('========\n%r' % dist)
 		print_object(dist)
+		#print(get_dist_directory(dist))
 		print_object(dist._provider)
 
 
@@ -274,11 +287,11 @@ class lib_install(easy_install):
 		setup_script = os.path.join(setup_base, 'setup.py')
 		with open(setup_script, 'w') as dst:
 			with open(src_file) as src:
-				directory = self.get_dist_directory(dist)
+				basename = self.get_dist_basename(dist)
 				for line in src:
 					line = Template(line).safe_substitute(
 						version=dist.version,
-						directory=directory,
+						basename=basename,
 					)
 					dst.write(line)
 		return setup_script
@@ -298,14 +311,14 @@ class lib_install(easy_install):
 				elif os.path.isdir(path):
 					rmtree(path)
 
-	def get_dist_directory(self, dist):
+	def get_dist_basename(self, dist):
 		from setuptools.package_index import egg_info_for_url, EXTENSIONS
 
 		basename, fragment = egg_info_for_url(dist.location)
 		for ext in EXTENSIONS:
 			if basename.endswith(ext):
 				basename = basename[:-len(ext)]
-				return basename
+				return os.path.basename(basename)
 
 
 def _main():
