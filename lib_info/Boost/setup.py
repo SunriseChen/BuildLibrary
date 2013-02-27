@@ -14,7 +14,7 @@ def pre_process():
 	bootstrap_command = ['bootstrap.bat']
 	build_command = ['b2.exe']
 
-	if env.platform[:3] != 'win':
+	if not env.platform.startswith('win'):
 		bootstrap_command = ['bootstrap.sh', '--prefix=/usr/local/']
 		build_command = ['b2', 'install']
 

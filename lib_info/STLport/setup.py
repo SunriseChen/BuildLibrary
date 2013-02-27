@@ -36,7 +36,7 @@ def pre_process():
 	config_command = ['configure.bat', env.compiler, '--with-static-rtl', '--with-dynamic-rtl']
 	make_command = ['nmake', 'clean', 'install']
 
-	if env.platform[:3] == 'win':
+	if env.platform.startswith('win'):
 		if env.compiler == 'msvc':
 			if float(env.compiler_version) > 9:
 				config_command[1] = 'msvc9'

@@ -59,8 +59,11 @@ def check_setuptools(times=3):
 
 def install_scons():
 	print('Install SCons...')
-	subprocess.call(['easy_install', 'SCons'])
-	restart()
+	install_command = ['easy_install', 'SCons']
+	if not sys.platform.startswith('win'):
+		install_command.insert(0, 'python')
+	subprocess.call(install_command)
+	#restart()
 
 
 def check_scons(times=3):
