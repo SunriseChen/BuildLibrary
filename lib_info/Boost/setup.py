@@ -21,6 +21,8 @@ def pre_process():
 	subprocess.call(bootstrap_command)
 	subprocess.call(build_command)
 	shutil.rmtree('bin.v2')
+	#shutil.rmtree('tools/build/v2/engine/bin.*')
+	shutil.rmtree('tools/build/v2/engine/bootstrap')
 	os.chdir('..')
 
 

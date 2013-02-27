@@ -33,15 +33,9 @@ def download_file(url, target_dir=os.curdir):
 	return os.path.realpath(file_path)
 
 
-def update_python_path():
-	import site
-
-	for path in site.getsitepackages():
-		site.addsitedir(path)
-
-
 def restart():
-	subprocess.call(sys.argv, shell=True)
+	print(sys.argv)
+	subprocess.call(['python'] + sys.argv, shell=True)
 	sys.exit()
 
 
@@ -308,6 +302,7 @@ class lib_install(easy_install):
 			os.path.join(setup_base, 'build'),
 			os.path.join(setup_base, project_name + '.egg-info'),
 			os.path.join(setup_base, 'setup.py'),
+			os.path.join(setup_base, 'setup.cfg'),
 		]
 		for path in paths:
 			if os.path.exists(path):
