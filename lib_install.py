@@ -34,8 +34,7 @@ def download_file(url, target_dir=os.curdir):
 
 
 def restart():
-	print(sys.argv)
-	subprocess.call(['python'] + sys.argv, shell=True)
+	subprocess.call(['python'] + sys.argv)
 	sys.exit()
 
 
