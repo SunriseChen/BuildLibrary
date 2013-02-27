@@ -79,7 +79,7 @@ def check_scons(times=3):
 				sys.path.insert(0, path)
 			import SCons
 			break
-		except subprocess.CalledProcessError, ImportError:
+		except (subprocess.CalledProcessError, ImportError):
 			install_scons()
 	else:
 		print('Install SCons fail!')
