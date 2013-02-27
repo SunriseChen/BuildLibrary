@@ -71,7 +71,7 @@ def check_scons(times=3):
 		try:
 			scons = subprocess.Popen(['scons', '-v'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 			scons.wait()
-			output = scons.read()
+			output = scons.stdout.read()
 			scons.stdout.close()
 			m = re.search(r"engine path: \['(?P<path>.+)SCons'\]", output)
 			if m and m.group('path'):
