@@ -69,7 +69,10 @@ def check_scons(times=3):
 
 	for i in range(times):
 		try:
-			output = subprocess.check_output(['scons', '-v'], stderr=subprocess.STDOUT, shell=True)
+			scons = subprocess.Popen(['scons', '-v'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+			scons.wait()
+			output = scons.read()
+			scons.stdout.close()
 			m = re.search(r"engine path: \['(?P<path>.+)SCons'\]", output)
 			if m and m.group('path'):
 				path = os.path.normpath(m.group('path'))
