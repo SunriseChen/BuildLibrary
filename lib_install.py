@@ -7,7 +7,7 @@ DEFAULT_VERSION = '0.1.0'
 DEFAULT_URL     = 'https://github.com/SunriseChen/BuildLibrary/archive/master.zip'
 PACK_FILE_ROOT_DIR = 'BuildLibrary-master'
 
-EZ_SETUP_URL = 'http://peak.telecommunity.com/dist/ez_setup.py'
+SETUPTOOLS_URL = 'http://python-distribute.org/distribute_setup.py'
 LIB_INFO_DIR = 'lib_info'
 
 TEMP_DIR_PREFIX = 'lib_install-'
@@ -40,11 +40,16 @@ def update_python_path():
 		site.addsitedir(path)
 
 
+def restart():
+	subprocess.call(sys.argv, shell=True)
+	sys.exit()
+
+
 def install_setuptools():
 	print('Install setuptools...')
-	ez_setup = download_file(EZ_SETUP_URL)
-	subprocess.call(['python', ez_setup])
-	update_python_path()
+	setuptools = download_file(SETUPTOOLS_URL)
+	subprocess.call(['python', setuptools])
+	restart()
 
 
 def check_setuptools(times=3):
@@ -62,7 +67,7 @@ def check_setuptools(times=3):
 def install_scons():
 	print('Install SCons...')
 	subprocess.call(['easy_install', 'SCons'])
-	update_python_path()
+	restart()
 
 
 def check_scons(times=3):
@@ -141,7 +146,7 @@ def update_self():
 		sys.exit()
 	else:
 		sys.argv.insert(1, '--updated')
-		subprocess.call(sys.argv, shell=True)
+		restart()
 
 
 def check_env():
