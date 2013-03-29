@@ -59,7 +59,12 @@ def check_setuptools(times=3):
 
 def install_scons():
 	print('Install SCons...')
-	subprocess.call(['easy_install', 'SCons'])
+	if sys.platform.startswith('win'):
+		subprocess.call(['easy_install', 'SCons'])
+	elif os.uname()[1] == 'Debian':
+		subprocess.call(['apt-get', '-y', 'install', 'scons'])
+	else:
+		subprocess.call(['yum', '-y', 'install', 'scons'])
 	#restart()
 
 
@@ -68,17 +73,13 @@ def check_scons(times=3):
 
 	for i in range(times):
 		try:
-			scons = subprocess.Popen(['scons', '-v'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-			scons.wait()
-			output = scons.stdout.read()
-			scons.stdout.close()
-			m = re.search(r"engine path: \['(?P<path>.+)SCons'\]", output)
-			if m and m.group('path'):
-				path = os.path.normpath(m.group('path'))
-				sys.path.insert(0, path)
+			import pkg_resources
+			d = pkg_resources.get_distribution('scons')
+			path = '%s/scons-%s' % (d.location, d.version)
+			sys.path.insert(0, path)
 			import SCons
 			break
-		except (subprocess.CalledProcessError, ImportError):
+		except (pkg_resources.DistributionNotFound, ImportError):
 			install_scons()
 	else:
 		print('Install SCons fail!')
