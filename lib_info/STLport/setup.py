@@ -50,6 +50,7 @@ def pre_process():
 		make_command[0] = 'make'
 
 	subprocess.call(config_command)
+	print('Current path: %s; Command: %s' % (os.path.abspath(os.curdir), make_command))
 	os.chdir('build/lib')
 	subprocess.call(make_command)
 	shutil.rmtree('obj')
