@@ -41,8 +41,8 @@ def restart():
 def install_setuptools():
 	print('Install setuptools...')
 	setuptools = download_file(SETUPTOOLS_URL)
-	subprocess.call(['python', setuptools])
-	restart()
+	if subprocess.call(['python', setuptools]) == 0:
+		restart()
 
 
 def check_setuptools(times=3):
@@ -146,10 +146,29 @@ def update_self():
 		restart()
 
 
+def setup_env():
+	print('Setup Environment...')
+	if sys.platform.startswith('win'):
+		vs_version = ['VS110', 'VS100', 'VS90', 'VS80', 'VS71', 'VS70']
+		for vs in vs_version:
+			vc_path = os.getenv(vs + 'COMNTOOLS')
+			if vc_path:
+				vc_path = os.path.abspath(vc_path + '../../VC')
+				break
+		else:
+			# Have not vs environment.
+			return
+		vc_script = os.path.join(vc_path, 'vcvarsall.bat')
+		arch = os.getenv('PROCESSOR_ARCHITECTURE')
+		if arch:
+			subprocess.call([vc_script, arch])
+
+
 def check_env():
 	check_setuptools()
 	check_scons()
 	update_self()
+	setup_env()
 
 
 def show_sys_vars():
@@ -205,9 +224,9 @@ def test():
 
 
 check_env()
-#show_sys_vars()
+show_sys_vars()
 #test()
-#exit()
+exit()
 
 
 from setuptools.command.easy_install import *
