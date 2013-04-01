@@ -45,7 +45,7 @@ class Environment(object):
 		subprocess.call(cmd)
 
 
-	def make(self, args):
+	def make(self, *args):
 		cmd = ['make']
 		if self.platform.startswith('win'):
 			if self.compiler == 'msvc':

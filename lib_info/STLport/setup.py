@@ -50,10 +50,10 @@ def pre_process():
 		make_command[0] = 'make'
 
 	#subprocess.call(config_command)
-	env.configure(config_command[1:])
+	env.configure(config_command[1], '--with-static-rtl', '--with-dynamic-rtl')
 	os.chdir('build/lib')
 	#subprocess.call(make_command)
-	env.make(make_command[1:])
+	env.make('clean', 'install')
 	shutil.rmtree('obj')
 	os.chdir('../../..')
 
