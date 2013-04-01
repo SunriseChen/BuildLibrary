@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os, sys, tempfile, shutil
+import os, sys, subprocess, tempfile, shutil
 from distutils import util, ccompiler
 from SCons.Environment import Environment as _Environment
 
@@ -40,7 +40,7 @@ class Environment(object):
 			cmd[0] = 'configure.bat'
 
 		if args:
-			cmd = cmd + args
+			cmd = cmd + list(args)
 
 		subprocess.call(cmd)
 
@@ -52,7 +52,7 @@ class Environment(object):
 				cmd[0] = 'nmake'
 
 		if args:
-			cmd = cmd + args
+			cmd = cmd + list(args)
 
 		subprocess.call(cmd)
 

@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os, sys, subprocess, shutil
+import os, sys, shutil
 
 
 def add_msvc2010_support(base_dir):
@@ -33,26 +33,20 @@ def pre_process():
 	os.chdir('$basename')
 
 	env = Environment()
-	config_command = ['configure.bat', env.compiler, '--with-static-rtl', '--with-dynamic-rtl']
-	make_command = ['nmake', 'clean', 'install']
 
+	compiler = ''
 	if env.platform.startswith('win'):
 		if env.compiler == 'msvc':
 			if float(env.compiler_version) > 9:
-				config_command[1] = 'msvc9'
+				compiler = 'msvc9'
 				add_msvc2010_support(os.path.abspath(os.curdir))
 			elif env.compiler_version[:3] == '7.1':
-				config_command[1] = 'msvc71'
+				compiler = 'msvc71'
 			else:
-				config_command[1] = env.compiler + env.compiler_version[0]
-	else:
-		config_command[0] = 'configure'
-		make_command[0] = 'make'
+				compiler = env.compiler + env.compiler_version[0]
 
-	#subprocess.call(config_command)
-	env.configure(config_command[1], '--with-static-rtl', '--with-dynamic-rtl')
+	env.configure(compiler, '--with-static-rtl', '--with-dynamic-rtl')
 	os.chdir('build/lib')
-	#subprocess.call(make_command)
 	env.make('clean', 'install')
 	shutil.rmtree('obj')
 	os.chdir('../../..')
