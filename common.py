@@ -24,14 +24,16 @@ def modify_file(filename, modify_list):
 
 class Environment(object):
 	def __init__(self):
-		self.__env = _Environment()
+		env = _Environment()
 		self.platform = sys.platform
-		self.arch = self.__env['TARGET_ARCH']
-		os.environ['path'] = self.__env['ENV']['PATH']
+		self.arch = env['TARGET_ARCH']
+		os.environ['path'] = env['ENV']['PATH']
+		os.environ['include'] = env['CPPPATH']
+		os.environ['libpath'] = env['LIBPATH']
 		self.compiler = ccompiler.get_default_compiler(os.name, sys.platform)
 		self.compiler_version = None
 		if self.compiler == 'msvc':
-			self.compiler_version = self.__env['MSVC_VERSION']
+			self.compiler_version = env['MSVC_VERSION']
 
 
 	def configure(self, *args):
