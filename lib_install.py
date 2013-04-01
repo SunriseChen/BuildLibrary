@@ -148,27 +148,22 @@ def update_self():
 
 def setup_env():
 	print('Setup Environment...')
+	from distutils import ccompiler
+	compiler = ccompiler.get_default_compiler()
+	from SCons.Environment import Environment
+	env = Environment()
+	os.environ['path'] = env['ENV']['PATH']
+
 	if sys.platform.startswith('win'):
-		vs_version = ['VS110', 'VS100', 'VS90', 'VS80', 'VS71', 'VS70']
-		for vs in vs_version:
-			vc_path = os.getenv(vs + 'COMNTOOLS')
-			if vc_path:
-				vc_path = os.path.abspath(vc_path + '../../VC')
-				break
-		else:
-			# Have not vs environment.
-			return
-		vc_script = os.path.join(vc_path, 'vcvarsall.bat')
-		arch = os.getenv('PROCESSOR_ARCHITECTURE')
-		if arch:
-			subprocess.call([vc_script, arch])
+		if compiler == 'msvc':
+			subprocess.call(['nmake'], shell=True)
 
 
 def check_env():
 	check_setuptools()
 	check_scons()
 	update_self()
-	setup_env()
+	#setup_env()
 
 
 def show_sys_vars():
@@ -176,7 +171,7 @@ def show_sys_vars():
 
 	from distutils import util, ccompiler
 	print('platform = %s' % util.get_platform())
-	print('compiler = %s' % ccompiler.get_default_compiler(os.name, sys.platform))
+	print('compiler = %s' % ccompiler.get_default_compiler())
 
 	from SCons.Environment import Environment
 	env = Environment()
@@ -185,11 +180,17 @@ def show_sys_vars():
 		'CXX',
 		'PLATFORM',
 		'MSVC_VERSION',
+		'TARGET',
 		'TARGET_ARCH',
+		'TARGET_OS',
 		'MSVS',
 		'MSVS_VERSION',
 		'MSVS_ARCH',
 		'TOOLS',
+		'HOST_ARCH',
+		'HOST_OS',
+		'MSVC_BATCH',
+		'MSVC_USE_SCRIPT',
 	]
 	for var in vars:
 		print('%s = %r' % (var, env.subst('$' + var)))
@@ -224,9 +225,9 @@ def test():
 
 
 check_env()
-show_sys_vars()
+#show_sys_vars()
 #test()
-exit()
+#exit()
 
 
 from setuptools.command.easy_install import *

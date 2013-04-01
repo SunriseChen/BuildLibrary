@@ -21,12 +21,38 @@ def modify_file(filename, modify_list):
 
 	shutil.move(f.name, filename)
 
+
 class Environment(object):
 	def __init__(self):
-		env = _Environment()
-		self.arch = env['TARGET_ARCH']
+		self.__env = _Environment()
 		self.platform = sys.platform
+		self.arch = self.__env['TARGET_ARCH']
+		os.environ['path'] = self.__env['ENV']['PATH']
 		self.compiler = ccompiler.get_default_compiler(os.name, sys.platform)
 		self.compiler_version = None
 		if self.compiler == 'msvc':
-			self.compiler_version = env['MSVC_VERSION']
+			self.compiler_version = self.__env['MSVC_VERSION']
+
+
+	def configure(self, *args):
+		cmd = ['configure']
+		if self.platform.startswith('win'):
+			cmd[0] = 'configure.bat'
+
+		if args:
+			cmd = cmd + args
+
+		subprocess.call(cmd)
+
+
+	def make(self, args):
+		cmd = ['make']
+		if self.platform.startswith('win'):
+			if self.compiler == 'msvc':
+				cmd[0] = 'nmake'
+
+		if args:
+			cmd = cmd + args
+
+		subprocess.call(cmd)
+

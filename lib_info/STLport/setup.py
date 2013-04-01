@@ -49,9 +49,11 @@ def pre_process():
 		config_command[0] = 'configure'
 		make_command[0] = 'make'
 
-	subprocess.call(config_command)
+	#subprocess.call(config_command)
+	env.configure(config_command[1:])
 	os.chdir('build/lib')
-	subprocess.call(make_command)
+	#subprocess.call(make_command)
+	env.make(make_command[1:])
 	shutil.rmtree('obj')
 	os.chdir('../../..')
 
