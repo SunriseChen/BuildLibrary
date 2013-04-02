@@ -35,8 +35,12 @@ def _args_to_list(args):
 
 
 def clean_files(*args):
+	import glob
+
 	for path in _args_to_list(args):
-		if os.path.exists(path):
+		if glob.has_magic(path):
+			clean_files(glob.glob(path))
+		elif os.path.exists(path):
 			if os.path.isfile(path):
 				os.remove(path)
 			elif os.path.isdir(path):

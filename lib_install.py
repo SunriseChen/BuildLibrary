@@ -17,7 +17,7 @@ PTH_FILE_NAME = 'lib-install.pth'
 def download_file(url, target_dir=os.curdir):
 	import urllib2
 
-	print('Downloading ' + url)
+	print('Downloading %s' % url)
 	remote_file = urllib2.urlopen(url)
 
 	if not os.path.exists(target_dir):
@@ -134,7 +134,7 @@ def update_self():
 	unpack_archive(download, tmpdir)
 	unpack_dir = os.path.join(tmpdir, PACK_FILE_ROOT_DIR)
 	move_update_files(unpack_dir, os.curdir,
-		shutil.ignore_patterns('.git*', '*.sln', '*.pyproj', '*.sample'))
+		shutil.ignore_patterns('.*', '*.sln', '*.pyproj', '*.sample'))
 	shutil.rmtree(tmpdir)
 	print('Self updated.')
 

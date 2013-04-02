@@ -1,28 +1,32 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os, sys, subprocess, shutil
+import os, subprocess
 
 
 def pre_process():
-	from common import Environment
+	from common import Environment, clean_files
 
 	print('Install Boost...')
 	os.chdir('$basename')
 
 	env = Environment()
+
 	bootstrap_command = ['bootstrap.bat']
 	build_command = ['b2.exe']
-
 	if not env.platform.startswith('win'):
 		bootstrap_command = ['bootstrap.sh', '--prefix=/usr/local/']
 		build_command = ['b2', 'install']
 
 	subprocess.call(bootstrap_command)
 	subprocess.call(build_command)
-	shutil.rmtree('bin.v2')
-	#shutil.rmtree('tools/build/v2/engine/bin.*')
-	shutil.rmtree('tools/build/v2/engine/bootstrap')
+
+	clean_list = [
+		'bin.v2',
+		'tools/build/v2/engine/bin.*',
+		'tools/build/v2/engine/bootstrap',
+	]
+	clean_files(clean_list)
 	os.chdir('..')
 
 

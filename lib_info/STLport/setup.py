@@ -48,6 +48,7 @@ def pre_process():
 	env.configure(compiler, '--with-static-rtl', '--with-dynamic-rtl')
 	os.chdir('build/lib')
 	env.make('clean', 'install')
+
 	clean_files('obj')
 	os.chdir('../../..')
 
