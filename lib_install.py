@@ -146,24 +146,10 @@ def update_self():
 		restart()
 
 
-def setup_env():
-	print('Setup Environment...')
-	from distutils import ccompiler
-	compiler = ccompiler.get_default_compiler()
-	from SCons.Environment import Environment
-	env = Environment()
-	os.environ['path'] = env['ENV']['PATH']
-
-	if sys.platform.startswith('win'):
-		if compiler == 'msvc':
-			subprocess.call(['nmake'], shell=True)
-
-
 def check_env():
 	check_setuptools()
 	check_scons()
 	update_self()
-	#setup_env()
 
 
 def show_sys_vars():
@@ -196,45 +182,17 @@ def show_sys_vars():
 		print('%s = %r' % (var, env.subst('$' + var)))
 
 
-def print_object(obj):
-	for item in obj.__dict__.items():
-		print('%s = %r' % item)
-
-
-def get_dist_directory(dist):
-	from setuptools.package_index import egg_info_for_url, EXTENSIONS
-
-	basename, fragment = egg_info_for_url(dist.location)
-	for ext in EXTENSIONS:
-		if basename.endswith(ext):
-			basename = basename[:-len(ext)]
-			return os.path.basename(basename)
-
-
-def test():
-	from setuptools.package_index import distros_for_url
-
-	dists = distros_for_url('http://sourceforge.net/projects/boost/files/boost/1.53.0/boost_1_53_0.tar.bz2%23egg=Boost-1.53.0#md5=a00d22605d5dbcfb4c9936a9b35bc4c2')
-	#dists = distros_for_url('http://sourceforge.net/projects/boost/files/boost/1.53.0/boost_1_53_0.tar.bz2#egg=Boost-1.53.0')
-	#dists = distros_for_url('file:C:\\sourceforge.net\\projects\\boost\\files\\boost\\1.53.0\\boost_1_53_0.tar.bz2#egg=Boost-1.53.0')
-	for dist in dists:
-		print('========\n%r' % dist)
-		print_object(dist)
-		#print(get_dist_directory(dist))
-		print_object(dist._provider)
-
-
 check_env()
 #show_sys_vars()
-#test()
 #exit()
 
 
 from setuptools.command.easy_install import *
-from setuptools.command.easy_install import rmtree
 from pkg_resources import *
 from distutils import log
 #from distutils.errors import *
+from common import clean_files
+
 
 class lib_install(easy_install):
 
@@ -244,6 +202,7 @@ class lib_install(easy_install):
 		self.index_url = 'file:' + LIB_INFO_DIR
 		self.build_directory = '..'
 
+
 	def finalize_options(self):
 		easy_install.finalize_options(self)
 
@@ -251,8 +210,10 @@ class lib_install(easy_install):
 			instdir = normalize_path(self.install_dir)
 			self.pth_file.filename = os.path.join(instdir, PTH_FILE_NAME)
 
+
 	def easy_install(self, spec, deps=False):
 		return self.lib_install(spec, deps)
+
 
 	def lib_install(self, spec, deps):
 		from setuptools.command.easy_install import parse_requirement_arg
@@ -297,10 +258,10 @@ class lib_install(easy_install):
 				return self.install_item(spec, dist.location, tmpdir, deps)
 
 		finally:
-			if os.path.exists(tmpdir):
-				rmtree(tmpdir)
+			clean_files(tmpdir)
 			if dist:
 				self.clean_build_files(dist.project_name)
+
 
 	def generate_setup(self, dist, setup_base):
 		from string import Template
@@ -316,23 +277,21 @@ class lib_install(easy_install):
 						basename=basename,
 					)
 					dst.write(line)
+
 		return setup_script
+
 
 	def clean_build_files(self, project_name):
 		setup_base = os.path.join(self.build_directory, project_name)
 		paths = [
 			os.path.join(setup_base, 'temp'),
-			os.path.join(setup_base, 'build'),
-			os.path.join(setup_base, project_name + '.egg-info'),
 			os.path.join(setup_base, 'setup.py'),
 			os.path.join(setup_base, 'setup.cfg'),
+			os.path.join(setup_base, 'build'),
+			os.path.join(setup_base, project_name + '.egg-info'),
 		]
-		for path in paths:
-			if os.path.exists(path):
-				if os.path.isfile(path):
-					os.remove(path)
-				elif os.path.isdir(path):
-					rmtree(path)
+		clean_files(paths)
+
 
 	def get_dist_basename(self, dist):
 		from setuptools.package_index import egg_info_for_url, EXTENSIONS

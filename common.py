@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os, sys, subprocess, tempfile, shutil
-from distutils import util, ccompiler
+from distutils import ccompiler
 from SCons.Environment import Environment as _Environment
 
 
@@ -22,15 +22,37 @@ def modify_file(filename, modify_list):
 	shutil.move(f.name, filename)
 
 
+def _args_to_list(args):
+	lst = []
+	if args:
+		for a in args:
+			if isinstance(a, list):
+				lst += a
+			else:
+				lst.append(a)
+
+	return lst
+
+
+def clean_files(*args):
+	for path in _args_to_list(args):
+		if os.path.exists(path):
+			if os.path.isfile(path):
+				os.remove(path)
+			elif os.path.isdir(path):
+				shutil.rmtree(path)
+
+
 class Environment(object):
 	def __init__(self):
 		env = _Environment()
 		self.platform = sys.platform
 		self.arch = env['TARGET_ARCH']
-		os.environ['path'] = env['ENV']['PATH']
-		os.environ['include'] = env['CPPPATH']
-		os.environ['libpath'] = env['LIBPATH']
-		self.compiler = ccompiler.get_default_compiler(os.name, sys.platform)
+		os.environ['PATH'] = env['ENV']['PATH']
+		os.environ['INCLUDE'] = env['ENV']['INCLUDE']
+		os.environ['LIB'] = env['ENV']['LIB']
+		os.environ['LIBPATH'] = env['ENV']['LIBPATH']
+		self.compiler = ccompiler.get_default_compiler()
 		self.compiler_version = None
 		if self.compiler == 'msvc':
 			self.compiler_version = env['MSVC_VERSION']
@@ -40,11 +62,15 @@ class Environment(object):
 		cmd = ['configure']
 		if self.platform.startswith('win'):
 			cmd[0] = 'configure.bat'
+		elif not os.path.exists(cmd[0]):
+			cmd[0] = 'configure.sh'
 
-		if args:
-			cmd = cmd + list(args)
+		if os.path.exists(cmd[0]):
+			cmd += _args_to_list(args)
+		else:
+			cmd = _args_to_list(args)
 
-		subprocess.call(cmd)
+		return subprocess.call(cmd) if cmd else False
 
 
 	def make(self, *args):
@@ -53,8 +79,7 @@ class Environment(object):
 			if self.compiler == 'msvc':
 				cmd[0] = 'nmake'
 
-		if args:
-			cmd = cmd + list(args)
+		cmd += _args_to_list(args)
 
-		subprocess.call(cmd)
+		return subprocess.call(cmd) if cmd else False
 

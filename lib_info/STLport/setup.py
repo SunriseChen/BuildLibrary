@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os, sys, shutil
+import os
 
 
 def add_msvc2010_support(base_dir):
@@ -27,7 +27,7 @@ inline _STLP_LONG_LONG  abs(_STLP_LONG_LONG __x) { return __x < 0 ? -__x : __x; 
 
 
 def pre_process():
-	from common import Environment
+	from common import Environment, clean_files
 
 	print('Install STLport...')
 	os.chdir('$basename')
@@ -48,8 +48,9 @@ def pre_process():
 	env.configure(compiler, '--with-static-rtl', '--with-dynamic-rtl')
 	os.chdir('build/lib')
 	env.make('clean', 'install')
-	shutil.rmtree('obj')
+	clean_files('obj')
 	os.chdir('../../..')
+
 
 def post_process():
 	print('post process.')
