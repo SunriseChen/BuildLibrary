@@ -52,14 +52,14 @@ class Environment(object):
 		env = _Environment()
 		self.platform = sys.platform
 		self.arch = env['TARGET_ARCH']
-		os.environ['PATH'] = env['ENV']['PATH']
-		os.environ['INCLUDE'] = env['ENV']['INCLUDE']
-		os.environ['LIB'] = env['ENV']['LIB']
-		os.environ['LIBPATH'] = env['ENV']['LIBPATH']
 		self.compiler = ccompiler.get_default_compiler()
 		self.compiler_version = None
 		if self.compiler == 'msvc':
 			self.compiler_version = env['MSVC_VERSION']
+			os.environ['PATH'] = env['ENV']['PATH']
+			os.environ['INCLUDE'] = env['ENV']['INCLUDE']
+			os.environ['LIB'] = env['ENV']['LIB']
+			os.environ['LIBPATH'] = env['ENV']['LIBPATH']
 
 
 	def configure(self, *args):

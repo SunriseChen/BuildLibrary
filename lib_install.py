@@ -59,13 +59,10 @@ def check_setuptools(times=3):
 
 def install_scons():
 	print('Install SCons...')
-	if sys.platform.startswith('win'):
-		subprocess.call(['easy_install', 'SCons'])
-	elif os.uname()[1] == 'Debian':
-		subprocess.call(['apt-get', '-y', 'install', 'scons'])
-	else:
-		subprocess.call(['yum', '-y', 'install', 'scons'])
-	#restart()
+	cmd = ['easy_install', 'SCons']
+	if not sys.platform.startswith('win'):
+		cmd[0] = os.path.join('/usr/bin', cmd[0])
+	subprocess.call(cmd)
 
 
 def check_scons(times=3):
@@ -237,6 +234,7 @@ class lib_install(easy_install):
 					self.not_editable(spec)
 					return self.install_item(None, spec, tmpdir, deps, True)
 				else:
+					spec = self.get_lib_name(spec)
 					spec = parse_requirement_arg(spec)
 
 			self.check_editable(spec)
@@ -261,6 +259,14 @@ class lib_install(easy_install):
 			clean_files(tmpdir)
 			if dist:
 				self.clean_build_files(dist.project_name)
+
+
+	def get_lib_name(self, spec):
+		for name in os.listdir(LIB_INFO_DIR):
+			if spec.lower() == name.lower() and os.path.isdir(os.path.join(LIB_INFO_DIR, name)):
+				return name
+
+		return spec
 
 
 	def generate_setup(self, dist, setup_base):
