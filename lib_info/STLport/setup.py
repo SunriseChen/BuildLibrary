@@ -45,9 +45,9 @@ def pre_process():
 			else:
 				compiler = env.compiler + env.compiler_version[0]
 
-	env.configure(compiler, '--with-static-rtl', '--with-dynamic-rtl')
+	#env.configure(compiler, '--with-static-rtl', '--with-dynamic-rtl')
 	os.chdir('build/lib')
-	env.make('clean', 'install')
+	#env.make('clean', 'install')
 
 	clean_files('obj')
 	os.chdir('../../..')

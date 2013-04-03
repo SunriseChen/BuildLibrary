@@ -18,8 +18,8 @@ def pre_process():
 		bootstrap_command = ['bootstrap.sh', '--prefix=/usr/local/']
 		build_command = ['b2', 'install']
 
-	subprocess.call(bootstrap_command)
-	subprocess.call(build_command)
+	#subprocess.call(bootstrap_command)
+	#subprocess.call(build_command)
 
 	clean_list = [
 		'bin.v2',

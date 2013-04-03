@@ -256,7 +256,8 @@ class lib_install(easy_install):
 				return self.install_item(spec, dist.location, tmpdir, deps)
 
 		finally:
-			clean_files(tmpdir)
+			if os.path.exists(tmpdir):
+				shutil.rmtree(tmpdir)
 			if dist:
 				self.clean_build_files(dist.project_name)
 
@@ -307,6 +308,31 @@ class lib_install(easy_install):
 			if basename.endswith(ext):
 				basename = basename[:-len(ext)]
 				return os.path.basename(basename)
+
+
+	def maybe_move(self, spec, dist_filename, setup_base):
+		print('spec = %r, dist_filename = %r, setup_base = %r' % (spec, dist_filename, setup_base))
+		dst = os.path.join(self.build_directory, spec.key)
+		if os.path.exists(dst):
+			log.warn(
+				"%r already exists in %s; build directory %s will not be kept",
+				spec.key, self.build_directory, setup_base
+			)
+			return setup_base
+		if os.path.isdir(dist_filename):
+			setup_base = dist_filename
+		else:
+			if os.path.dirname(dist_filename)==setup_base:
+				os.unlink(dist_filename)	# get it out of the tmp dir
+			contents = os.listdir(setup_base)
+			if len(contents)==1:
+				dist_filename = os.path.join(setup_base,contents[0])
+				if os.path.isdir(dist_filename):
+					# if the only thing there is a directory, move it instead
+					setup_base = dist_filename
+		print('dst = %r, setup_base = %r' % (dst, setup_base))
+		ensure_directory(dst); shutil.move(setup_base, dst)
+		return dst
 
 
 def _main():
