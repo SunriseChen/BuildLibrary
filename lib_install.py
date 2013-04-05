@@ -83,7 +83,7 @@ def check_scons(times=3):
 		sys.exit(1)
 
 
-def move_update_files(src_dir, dst_dir, ignore=None):
+def move_files(src_dir, dst_dir, ignore=None):
 	names = os.listdir(src_dir)
 	if ignore is not None:
 		ignored_names = ignore(src_dir, names)
@@ -107,7 +107,7 @@ def move_update_files(src_dir, dst_dir, ignore=None):
 		elif os.path.isdir(src_name):
 			if os.path.isfile(dst_name) or os.path.islink(dst_name):
 				os.remove(dst_name)
-			move_update_files(src_name, dst_name, ignore)
+			move_files(src_name, dst_name, ignore)
 		else:
 			if os.path.islink(dst_name):
 				os.remove(dst_name)
@@ -130,7 +130,7 @@ def update_self():
 	print('Downloaded.')
 	unpack_archive(download, tmpdir)
 	unpack_dir = os.path.join(tmpdir, PACK_FILE_ROOT_DIR)
-	move_update_files(unpack_dir, os.curdir,
+	move_files(unpack_dir, os.curdir,
 		shutil.ignore_patterns('.*', '*.sln', '*.pyproj', '*.sample'))
 	shutil.rmtree(tmpdir)
 	print('Self updated.')
@@ -242,6 +242,7 @@ class lib_install(easy_install):
 				spec, tmpdir, self.upgrade, self.editable, not self.always_copy,
 				self.local_index
 			)
+			print('dist = %r' % dist)
 			if dist is None:
 				msg = "Could not find suitable distribution for %r" % spec
 				if self.always_copy:
@@ -311,26 +312,26 @@ class lib_install(easy_install):
 
 
 	def maybe_move(self, spec, dist_filename, setup_base):
-		print('spec = %r, dist_filename = %r, setup_base = %r' % (spec, dist_filename, setup_base))
-		dst = os.path.join(self.build_directory, spec.key)
-		if os.path.exists(dst):
-			log.warn(
-				"%r already exists in %s; build directory %s will not be kept",
-				spec.key, self.build_directory, setup_base
-			)
-			return setup_base
-		if os.path.isdir(dist_filename):
-			setup_base = dist_filename
-		else:
-			if os.path.dirname(dist_filename)==setup_base:
-				os.unlink(dist_filename)	# get it out of the tmp dir
+		def maybe_move_instead(setup_base):
 			contents = os.listdir(setup_base)
 			if len(contents)==1:
 				dist_filename = os.path.join(setup_base,contents[0])
 				if os.path.isdir(dist_filename):
 					# if the only thing there is a directory, move it instead
 					setup_base = dist_filename
-		print('dst = %r, setup_base = %r' % (dst, setup_base))
+			return setup_base
+
+		dst = os.path.join(self.build_directory, spec.key)
+		if os.path.exists(dst):
+			setup_base = maybe_move_instead(setup_base)
+			move_files(setup_base, dst)
+			return dst
+		if os.path.isdir(dist_filename):
+			setup_base = dist_filename
+		else:
+			if os.path.dirname(dist_filename)==setup_base:
+				os.unlink(dist_filename)	# get it out of the tmp dir
+			setup_base = maybe_move_instead(setup_base)
 		ensure_directory(dst); shutil.move(setup_base, dst)
 		return dst
 
