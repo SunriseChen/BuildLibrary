@@ -196,7 +196,8 @@ class lib_install(easy_install):
 	def initialize_options(self):
 		easy_install.initialize_options(self)
 
-		self.index_url = 'file:' + LIB_INFO_DIR
+		self.index_url = 'file:///' + os.path.abspath(LIB_INFO_DIR)
+		self.index_url = self.index_url.replace('\\', '/')
 		self.build_directory = '..'
 
 
@@ -242,7 +243,6 @@ class lib_install(easy_install):
 				spec, tmpdir, self.upgrade, self.editable, not self.always_copy,
 				self.local_index
 			)
-			print('dist = %r' % dist)
 			if dist is None:
 				msg = "Could not find suitable distribution for %r" % spec
 				if self.always_copy:
