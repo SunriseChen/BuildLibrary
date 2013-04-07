@@ -196,7 +196,7 @@ class lib_install(easy_install):
 	def initialize_options(self):
 		easy_install.initialize_options(self)
 
-		self.index_url = 'file:///' + os.path.abspath(LIB_INFO_DIR)
+		self.index_url = 'file://' + os.path.abspath(LIB_INFO_DIR)
 		self.index_url = self.index_url.replace('\\', '/')
 		self.build_directory = '..'
 

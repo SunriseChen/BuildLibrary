@@ -63,11 +63,11 @@ class Environment(object):
 
 
 	def configure(self, *args):
-		cmd = ['configure']
+		cmd = ['./configure']
 		if self.platform.startswith('win'):
 			cmd[0] = 'configure.bat'
 		elif not os.path.exists(cmd[0]):
-			cmd[0] = 'configure.sh'
+			cmd[0] = './configure.sh'
 
 		if os.path.exists(cmd[0]):
 			cmd += _args_to_list(args)
