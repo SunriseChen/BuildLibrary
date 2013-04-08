@@ -74,7 +74,6 @@ class Environment(object):
 		else:
 			cmd = _args_to_list(args)
 
-		print(cmd)
 		return subprocess.call(cmd) if cmd else False
 
 
@@ -86,6 +85,5 @@ class Environment(object):
 
 		cmd += _args_to_list(args)
 
-		print(cmd)
 		return subprocess.call(cmd) if cmd else False
 

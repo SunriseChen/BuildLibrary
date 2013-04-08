@@ -260,7 +260,7 @@ class lib_install(easy_install):
 			if os.path.exists(tmpdir):
 				shutil.rmtree(tmpdir)
 			if dist:
-				self.clean_build_files(dist.project_name)
+				self.clean_build_files(dist)
 
 
 	def get_lib_name(self, spec):
@@ -289,14 +289,14 @@ class lib_install(easy_install):
 		return setup_script
 
 
-	def clean_build_files(self, project_name):
-		setup_base = os.path.join(self.build_directory, project_name)
+	def clean_build_files(self, dist):
+		setup_base = os.path.join(self.build_directory, dist.key)
 		paths = [
 			os.path.join(setup_base, 'temp'),
 			os.path.join(setup_base, 'setup.py'),
 			os.path.join(setup_base, 'setup.cfg'),
 			os.path.join(setup_base, 'build'),
-			os.path.join(setup_base, project_name + '.egg-info'),
+			os.path.join(setup_base, dist.project_name + '.egg-info'),
 		]
 		clean_files(paths)
 
