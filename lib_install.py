@@ -85,7 +85,7 @@ def check_scons(times=3):
 
 def move_files(src_dir, dst_dir, ignore=None):
 	names = os.listdir(src_dir)
-	if ignore is not None:
+	if ignore:
 		ignored_names = ignore(src_dir, names)
 	else:
 		ignored_names = set()
@@ -185,6 +185,7 @@ check_env()
 
 
 from setuptools.command.easy_install import *
+from setuptools.command.easy_install import rmtree
 from pkg_resources import *
 from distutils import log
 #from distutils.errors import *
@@ -208,59 +209,19 @@ class lib_install(easy_install):
 			instdir = normalize_path(self.install_dir)
 			self.pth_file.filename = os.path.join(instdir, PTH_FILE_NAME)
 
+		# fix PackageIndex._download_svn()
+		# ...
+
 
 	def easy_install(self, spec, deps=False):
-		return self.lib_install(spec, deps)
-
-
-	def lib_install(self, spec, deps):
-		from setuptools.command.easy_install import parse_requirement_arg
-		from setuptools.package_index import URL_SCHEME
-
-		tmpdir = tempfile.mkdtemp(prefix=TEMP_DIR_PREFIX)
-		download = None
-		if not self.editable: self.install_site_py()
-
 		try:
-			dist = None
-			if not isinstance(spec, Requirement):
-				if URL_SCHEME(spec):
-					# It's a url, download it to tmpdir and process
-					self.not_editable(spec)
-					download = self.package_index.download(spec, tmpdir)
-					return self.install_item(None, download, tmpdir, deps, True)
-
-				elif os.path.exists(spec):
-					# Existing file or directory, just process it directly
-					self.not_editable(spec)
-					return self.install_item(None, spec, tmpdir, deps, True)
-				else:
-					spec = self.get_lib_name(spec)
-					spec = parse_requirement_arg(spec)
-
-			self.check_editable(spec)
-			dist = self.package_index.fetch_distribution(
-				spec, tmpdir, self.upgrade, self.editable, not self.always_copy,
-				self.local_index
-			)
-			if dist is None:
-				msg = "Could not find suitable distribution for %r" % spec
-				if self.always_copy:
-					msg+=" (--always-copy skips system and development eggs)"
-				raise DistutilsError(msg)
-			elif dist.precedence==DEVELOP_DIST:
-				# .egg-info dists don't need installing, just process deps
-				self.process_distribution(spec, dist, deps, "Using")
-				return dist
-			else:
-				self.generate_setup(dist, tmpdir)
-				return self.install_item(spec, dist.location, tmpdir, deps)
-
+			spec = self.get_lib_name(spec)
+			dist = easy_install.easy_install(self, spec, deps)
+			return dist
+		except BaseException as e:
+			print('%r' % e)
 		finally:
-			if os.path.exists(tmpdir):
-				shutil.rmtree(tmpdir)
-			if dist:
-				self.clean_build_files(dist)
+			self.clean_build_files(dist)
 
 
 	def get_lib_name(self, spec):
@@ -271,14 +232,69 @@ class lib_install(easy_install):
 		return spec
 
 
-	def generate_setup(self, dist, setup_base):
+	def clean_build_files(self, dist):
+		setup_base = os.path.join(self.build_directory, dist.project_name)
+		paths = [
+			os.path.join(setup_base, 'setup.py'),
+			os.path.join(setup_base, 'setup.cfg'),
+			os.path.join(setup_base, 'temp'),
+			os.path.join(setup_base, 'build'),
+			os.path.join(setup_base, dist.project_name + '.egg-info'),
+		]
+		clean_files(paths)
+
+
+	def maybe_move(self, spec, dist_filename, src):
+		def maybe_move_instead(src):
+			contents = os.listdir(src)
+			if len(contents)==1:
+				dist_filename = os.path.join(src,contents[0])
+				if os.path.isdir(dist_filename):
+					# if the only thing there is a directory, move it instead
+					src = dist_filename
+			return src
+
+		dist = self.get_dist(dist_filename)
+		basename = '%s-%s' % (dist.project_name, dist.version)
+		setup_base = os.path.join(self.build_directory, dist.project_name)
+		dst = os.path.join(setup_base, basename)
+		if os.path.exists(dst):
+			src = maybe_move_instead(src)
+			move_files(src, dst)
+		else:
+			if os.path.isdir(dist_filename):
+				src = dist_filename
+			else:
+				if os.path.dirname(dist_filename)==src:
+					os.unlink(dist_filename)	# get it out of the tmp dir
+				src = maybe_move_instead(src)
+			ensure_directory(dst); shutil.move(src, dst)
+
+		self.generate_setup(dist, setup_base, basename)
+		return setup_base
+
+
+	def get_dist(self, dist_filename):
+		from setuptools.package_index import URL_SCHEME, distros_for_url, distros_for_filename
+
+		dists = [d for d in 
+				(distros_for_url(dist_filename) if URL_SCHEME(dist_filename)
+					else distros_for_filename(dist_filename)) if d.version
+		] or []
+		if len(dists) == 1:
+			return dists[0]
+		else:
+			raise DistutilsError("Can't unambiguously interpret project/version identifier %r" % dist_filename)
+
+
+	def generate_setup(self, dist, setup_base, basename):
 		from string import Template
 
 		src_file = os.path.join(LIB_INFO_DIR, dist.project_name, 'setup.py')
 		setup_script = os.path.join(setup_base, 'setup.py')
+		print('Writing %s' % setup_script)
 		with open(setup_script, 'w') as dst:
 			with open(src_file) as src:
-				basename = self.get_dist_basename(dist)
 				for line in src:
 					line = Template(line).safe_substitute(
 						version=dist.version,
@@ -287,53 +303,6 @@ class lib_install(easy_install):
 					dst.write(line)
 
 		return setup_script
-
-
-	def clean_build_files(self, dist):
-		setup_base = os.path.join(self.build_directory, dist.key)
-		paths = [
-			os.path.join(setup_base, 'temp'),
-			os.path.join(setup_base, 'setup.py'),
-			os.path.join(setup_base, 'setup.cfg'),
-			os.path.join(setup_base, 'build'),
-			os.path.join(setup_base, dist.project_name + '.egg-info'),
-		]
-		clean_files(paths)
-
-
-	def get_dist_basename(self, dist):
-		from setuptools.package_index import egg_info_for_url, EXTENSIONS
-
-		basename, fragment = egg_info_for_url(dist.location)
-		for ext in EXTENSIONS:
-			if basename.endswith(ext):
-				basename = basename[:-len(ext)]
-				return os.path.basename(basename)
-
-
-	def maybe_move(self, spec, dist_filename, setup_base):
-		def maybe_move_instead(setup_base):
-			contents = os.listdir(setup_base)
-			if len(contents)==1:
-				dist_filename = os.path.join(setup_base,contents[0])
-				if os.path.isdir(dist_filename):
-					# if the only thing there is a directory, move it instead
-					setup_base = dist_filename
-			return setup_base
-
-		dst = os.path.join(self.build_directory, spec.key)
-		if os.path.exists(dst):
-			setup_base = maybe_move_instead(setup_base)
-			move_files(setup_base, dst)
-			return dst
-		if os.path.isdir(dist_filename):
-			setup_base = dist_filename
-		else:
-			if os.path.dirname(dist_filename)==setup_base:
-				os.unlink(dist_filename)	# get it out of the tmp dir
-			setup_base = maybe_move_instead(setup_base)
-		ensure_directory(dst); shutil.move(setup_base, dst)
-		return dst
 
 
 def _main():
