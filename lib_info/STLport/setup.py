@@ -35,20 +35,20 @@ def pre_process():
 	env = Environment()
 
 	config_parameter = []
-	if env.platform.startswith('win'):
-		if env.compiler == 'msvc':
-			if float(env.compiler_version) > 9:
-				config_parameter.append('msvc9')
-				add_msvc2010_support(os.path.abspath(os.curdir))
-			elif env.compiler_version[:3] == '7.1':
-				config_parameter.append('msvc71')
-			else:
-				config_parameter.append('msvc' + env.compiler_version[0])
+	if env.platform.startswith('win') and env.compiler == 'msvc':
+		ver = float(env.compiler_version)
+		if ver > 9:
+			config_parameter.append('msvc9')
+			add_msvc2010_support(os.path.abspath(os.curdir))
+		elif env.compiler_version[:3] == '7.1':
+			config_parameter.append('msvc71')
+		else:
+			config_parameter.append('msvc' + env.compiler_version[0])
 
 	config_parameter += ['--with-static-rtl', '--with-dynamic-rtl']
-	env.configure(config_parameter)
+	#env.configure(config_parameter)
 	os.chdir('build/lib')
-	env.make('clean', 'install')
+	#env.make('clean', 'install')
 
 	clean_files('obj')
 	os.chdir('../../..')
