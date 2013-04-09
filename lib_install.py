@@ -184,12 +184,12 @@ check_env()
 #exit()
 
 
+from distutils import log
 from setuptools.command.easy_install import *
 from setuptools.command.easy_install import rmtree
 from pkg_resources import *
-from distutils import log
 #from distutils.errors import *
-from common import clean_files
+from common import *
 
 
 class lib_install(easy_install):
@@ -214,32 +214,23 @@ class lib_install(easy_install):
 
 
 	def easy_install(self, spec, deps=False):
+		lib_name = get_lib_name(LIB_INFO_DIR, spec)
 		try:
-			spec = self.get_lib_name(spec)
-			dist = easy_install.easy_install(self, spec, deps)
-			return dist
+			return easy_install.easy_install(self, lib_name, deps)
 		except BaseException as e:
-			print('%r' % e)
+			print('Exception: %r' % e)
 		finally:
-			self.clean_build_files(dist)
+			self.clean_build_files(lib_name)
 
 
-	def get_lib_name(self, spec):
-		for name in os.listdir(LIB_INFO_DIR):
-			if spec.lower() == name.lower() and os.path.isdir(os.path.join(LIB_INFO_DIR, name)):
-				return name
-
-		return spec
-
-
-	def clean_build_files(self, dist):
-		setup_base = os.path.join(self.build_directory, dist.project_name)
+	def clean_build_files(self, lib_name):
+		setup_base = os.path.join(self.build_directory, lib_name)
 		paths = [
 			os.path.join(setup_base, 'setup.py'),
 			os.path.join(setup_base, 'setup.cfg'),
 			os.path.join(setup_base, 'temp'),
 			os.path.join(setup_base, 'build'),
-			os.path.join(setup_base, dist.project_name + '.egg-info'),
+			os.path.join(setup_base, lib_name + '.egg-info'),
 		]
 		clean_files(paths)
 
@@ -254,7 +245,10 @@ class lib_install(easy_install):
 					src = dist_filename
 			return src
 
-		dist = self.get_dist(dist_filename)
+		print('spec = %r' % spec)
+		print('dist_filename = %r' % dist_filename)
+		print('src = %r' % src)
+		dist = get_dist(dist_filename)
 		basename = '%s-%s' % (dist.project_name, dist.version)
 		setup_base = os.path.join(self.build_directory, dist.project_name)
 		dst = os.path.join(setup_base, basename)
@@ -270,39 +264,8 @@ class lib_install(easy_install):
 				src = maybe_move_instead(src)
 			ensure_directory(dst); shutil.move(src, dst)
 
-		self.generate_setup(dist, setup_base, basename)
+		generate_setup(dist, LIB_INFO_DIR, setup_base, basename)
 		return setup_base
-
-
-	def get_dist(self, dist_filename):
-		from setuptools.package_index import URL_SCHEME, distros_for_url, distros_for_filename
-
-		dists = [d for d in 
-				(distros_for_url(dist_filename) if URL_SCHEME(dist_filename)
-					else distros_for_filename(dist_filename)) if d.version
-		] or []
-		if len(dists) == 1:
-			return dists[0]
-		else:
-			raise DistutilsError("Can't unambiguously interpret project/version identifier %r" % dist_filename)
-
-
-	def generate_setup(self, dist, setup_base, basename):
-		from string import Template
-
-		src_file = os.path.join(LIB_INFO_DIR, dist.project_name, 'setup.py')
-		setup_script = os.path.join(setup_base, 'setup.py')
-		print('Writing %s' % setup_script)
-		with open(setup_script, 'w') as dst:
-			with open(src_file) as src:
-				for line in src:
-					line = Template(line).safe_substitute(
-						version=dist.version,
-						basename=basename,
-					)
-					dst.write(line)
-
-		return setup_script
 
 
 def _main():

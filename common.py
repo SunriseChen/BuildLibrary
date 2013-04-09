@@ -3,6 +3,7 @@
 
 import os, sys, subprocess, tempfile, shutil
 from distutils import ccompiler
+from distutils.errors import *
 from SCons.Environment import Environment as _Environment
 
 
@@ -45,6 +46,45 @@ def clean_files(*args):
 				os.remove(path)
 			elif os.path.isdir(path):
 				shutil.rmtree(path)
+
+
+def get_lib_name(lib_info_dir, spec):
+	for name in os.listdir(lib_info_dir):
+		if spec.lower() == name.lower() and os.path.isdir(os.path.join(lib_info_dir, name)):
+			return name
+
+	return spec
+
+
+def get_dist(dist_filename):
+	from setuptools.package_index import URL_SCHEME, distros_for_url, distros_for_filename
+
+	dists = [d for d in 
+			(distros_for_url(dist_filename) if URL_SCHEME(dist_filename)
+				else distros_for_filename(dist_filename)) if d.version
+	] or []
+	if len(dists) == 1:
+		return dists[0]
+	else:
+		raise DistutilsError("Can't unambiguously interpret project/version identifier %s" % dist_filename)
+
+
+def generate_setup(dist, lib_info_dir, setup_base, basename):
+	from string import Template
+
+	src_file = os.path.join(lib_info_dir, dist.project_name, 'setup.py')
+	setup_script = os.path.join(setup_base, 'setup.py')
+	print('Writing %s' % setup_script)
+	with open(setup_script, 'w') as dst:
+		with open(src_file) as src:
+			for line in src:
+				line = Template(line).safe_substitute(
+					version=dist.version,
+					basename=basename,
+				)
+				dst.write(line)
+
+	return setup_script
 
 
 class Environment(object):
