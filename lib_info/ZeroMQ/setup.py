@@ -9,11 +9,11 @@ def build(version):
 	print('Install ZeroMQ...')
 
 	env = Environment()
-	if env.platform.startswith('win') and env.compiler == 'msvc':
+	if env.compiler == 'msvc':
 		sln_file = r'builds\msvc\msvc%s.sln' % (
 			'10' if env.compiler_version > '9.0' else '')
 		build_command = ['vcbuild', '/rebuild', sln_file]
-		subprocess.call(build_command)
+		subprocess.call(build_command, shell=True)
 	else:
 		env.configure()
 		env.make('clean', 'install')
@@ -30,6 +30,7 @@ def main():
 	os.chdir('$basename')
 	if build(version):
 		os.chdir('..')
+		print(os.path.abspath(os.curdir))
 
 		from setuptools import setup
 		setup(

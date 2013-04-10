@@ -237,8 +237,8 @@ class lib_install(easy_install):
 
 	def maybe_move(self, spec, dist_filename, src):
 		dist = get_dist(spec, self.package_index, self.editable, not self.always_copy)
-		basename = '%s-%s' % (dist.project_name, dist.version)
-		setup_base = os.path.join(self.build_directory, dist.project_name)
+		basename = '%s-%s' % (spec.project_name, dist.version)
+		setup_base = os.path.join(self.build_directory, spec.project_name)
 
 		def maybe_move_instead(src):
 			contents = os.listdir(src)

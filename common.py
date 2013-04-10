@@ -31,11 +31,11 @@ def modify_file(filename, modify_list):
 def _args_to_list(args):
 	lst = []
 	if args:
-		for a in args:
-			if isinstance(a, list):
-				lst += a
+		for arg in args:
+			if isinstance(arg, list):
+				lst += arg
 			else:
-				lst.append(a)
+				lst.append(arg)
 
 	return lst
 
@@ -121,9 +121,8 @@ class Environment(object):
 
 	def make(self, *args):
 		cmd = ['make']
-		if self.platform.startswith('win'):
-			if self.compiler == 'msvc':
-				cmd[0] = 'nmake'
+		if self.compiler == 'msvc':
+			cmd[0] = 'nmake'
 
 		cmd += _args_to_list(args)
 

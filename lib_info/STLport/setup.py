@@ -41,7 +41,7 @@ def build(version):
 	config_parameter = []
 
 	env = Environment()
-	if env.platform.startswith('win') and env.compiler == 'msvc':
+	if env.compiler == 'msvc':
 		if env.compiler_version > '9.0':
 			config_parameter.append('msvc9')
 			add_msvc2010_support(base_dir)
@@ -76,6 +76,7 @@ def main():
 	os.chdir('$basename')
 	if build(version):
 		os.chdir('..')
+		print(os.path.abspath(os.curdir))
 
 		from setuptools import setup
 		setup(
