@@ -236,6 +236,10 @@ class lib_install(easy_install):
 
 
 	def maybe_move(self, spec, dist_filename, src):
+		dist = get_dist(spec, self.package_index, self.editable, not self.always_copy)
+		basename = '%s-%s' % (dist.project_name, dist.version)
+		setup_base = os.path.join(self.build_directory, dist.project_name)
+
 		def maybe_move_instead(src):
 			contents = os.listdir(src)
 			if len(contents)==1:
@@ -245,16 +249,9 @@ class lib_install(easy_install):
 					src = dist_filename
 			return src
 
-		print('spec = %r' % spec)
-		print('dist_filename = %r' % dist_filename)
-		print('src = %r' % src)
-		dist = get_dist(dist_filename)
-		basename = '%s-%s' % (dist.project_name, dist.version)
-		setup_base = os.path.join(self.build_directory, dist.project_name)
 		dst = os.path.join(setup_base, basename)
 		if os.path.exists(dst):
 			src = maybe_move_instead(src)
-			move_files(src, dst)
 		else:
 			if os.path.isdir(dist_filename):
 				src = dist_filename
@@ -262,9 +259,11 @@ class lib_install(easy_install):
 				if os.path.dirname(dist_filename)==src:
 					os.unlink(dist_filename)	# get it out of the tmp dir
 				src = maybe_move_instead(src)
-			ensure_directory(dst); shutil.move(src, dst)
+			ensure_directory(dst)
 
+		move_files(src, dst, shutil.ignore_patterns('.*'))
 		generate_setup(dist, LIB_INFO_DIR, setup_base, basename)
+
 		return setup_base
 
 

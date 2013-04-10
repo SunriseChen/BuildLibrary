@@ -3,11 +3,16 @@
 
 import os, sys, subprocess, tempfile, shutil
 from distutils import ccompiler
+from distutils.version import StrictVersion
 from distutils.errors import *
+from pkg_resources import *
 from SCons.Environment import Environment as _Environment
 
 
 def modify_file(filename, modify_list):
+	if not os.path.isfile(filename):
+		return
+
 	text = ''
 	with open(filename) as f:
 		text = f.read()
@@ -41,11 +46,10 @@ def clean_files(*args):
 	for path in _args_to_list(args):
 		if glob.has_magic(path):
 			clean_files(glob.glob(path))
-		elif os.path.exists(path):
-			if os.path.isfile(path):
-				os.remove(path)
-			elif os.path.isdir(path):
-				shutil.rmtree(path)
+		elif os.path.isfile(path):
+			os.remove(path)
+		elif os.path.isdir(path):
+			shutil.rmtree(path)
 
 
 def get_lib_name(lib_info_dir, spec):
@@ -56,17 +60,15 @@ def get_lib_name(lib_info_dir, spec):
 	return spec
 
 
-def get_dist(dist_filename):
-	from setuptools.package_index import URL_SCHEME, distros_for_url, distros_for_filename
+def get_dist(req, env, source, develop_ok):
+	for dist in env[req.key]:
+		if dist.precedence==DEVELOP_DIST and not develop_ok:
+			continue
 
-	dists = [d for d in 
-			(distros_for_url(dist_filename) if URL_SCHEME(dist_filename)
-				else distros_for_filename(dist_filename)) if d.version
-	] or []
-	if len(dists) == 1:
-		return dists[0]
-	else:
-		raise DistutilsError("Can't unambiguously interpret project/version identifier %s" % dist_filename)
+		if dist in req and (dist.precedence<=SOURCE_DIST or not source):
+			return dist
+
+	raise DistutilsError("Can't get %r" % req)
 
 
 def generate_setup(dist, lib_info_dir, setup_base, basename):
@@ -90,12 +92,12 @@ def generate_setup(dist, lib_info_dir, setup_base, basename):
 class Environment(object):
 	def __init__(self):
 		env = _Environment()
-		self.platform = sys.platform
 		self.arch = env['TARGET_ARCH']
+		self.platform = sys.platform
 		self.compiler = ccompiler.get_default_compiler()
-		self.compiler_version = None
+		self.compiler_version = StrictVersion('0.0')
 		if self.compiler == 'msvc':
-			self.compiler_version = env['MSVC_VERSION']
+			self.compiler_version = StrictVersion(env['MSVC_VERSION'])
 			os.environ['PATH'] = env['ENV']['PATH']
 			os.environ['INCLUDE'] = env['ENV']['INCLUDE']
 			os.environ['LIB'] = env['ENV']['LIB']

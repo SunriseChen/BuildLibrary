@@ -1,13 +1,11 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os
+import os, re
+from common import *
 
 
 def add_msvc2010_support(base_dir):
-	import re
-	from common import modify_file
-
 	filename = os.path.join(base_dir, 'stlport/stl/_cstdlib.h')
 	modify_list = [
 		(re.compile(r'^inline\s+_STLP_LONG_LONG\s+abs\(_STLP_LONG_LONG\s+__x\)\s+\{\s+return\s+__x\s+<\s+0\s+\?\s+-__x\s+:\s+__x;\s+\}$', re.M),
@@ -26,54 +24,70 @@ inline _STLP_LONG_LONG  abs(_STLP_LONG_LONG __x) { return __x < 0 ? -__x : __x; 
 	modify_file(filename, modify_list)
 
 
-def pre_process():
-	from common import Environment, clean_files
+def fix_stlport6(base_dir):
+	filename = os.path.join(base_dir, 'stlport/stl/config/_msvc.h')
+	modify_list = [
+		(re.compile(r'^#\s+define\s+_STLP_DONT_USE_BOOL_TYPEDEF\s+1\s+#\s+endif$', re.M),
+		'''#    define _STLP_DONT_USE_BOOL_TYPEDEF 1
+//#  endif	// fix bug'''),
+	]
+	modify_file(filename, modify_list)
 
+
+def build(version):
 	print('Install STLport...')
-	os.chdir('$basename')
+
+	base_dir = os.path.abspath(os.curdir)
+	config_parameter = []
 
 	env = Environment()
-
-	config_parameter = []
 	if env.platform.startswith('win') and env.compiler == 'msvc':
-		ver = float(env.compiler_version)
-		if ver > 9:
+		if env.compiler_version > '9.0':
 			config_parameter.append('msvc9')
-			add_msvc2010_support(os.path.abspath(os.curdir))
-		elif env.compiler_version[:3] == '7.1':
+			add_msvc2010_support(base_dir)
+		elif '7.0' < env.compiler_version and env.compiler_version < '7.2':
 			config_parameter.append('msvc71')
 		else:
 			config_parameter.append('msvc' + env.compiler_version[0])
 
 	config_parameter += ['--with-static-rtl', '--with-dynamic-rtl']
-	#env.configure(config_parameter)
-	os.chdir('build/lib')
-	#env.make('clean', 'install')
+	env.configure(config_parameter)
+
+	if version > '5.2.1':
+		fix_stlport6(base_dir)
+		os.chdir('src')
+	else:
+		os.chdir('build/lib')
+	env.make('clean', 'install')
 
 	clean_files('obj')
-	os.chdir('../../..')
+	if version > '5.2.1':
+		os.chdir('..')
+	else:
+		os.chdir('../..')
 
-
-def post_process():
-	print('post process.')
+	return True
 
 
 def main():
-	pre_process()
+	from distutils.version import LooseVersion
 
-	from setuptools import setup
-	setup(
-		name='STLport',
-		version='$version',
+	version = LooseVersion('$version')
+	os.chdir('$basename')
+	if build(version):
+		os.chdir('..')
 
-		author='Petr Ovtchenkov',
-		author_email='support@stlport.com',
-		description='Multiplatform C++ Standard Library (STL implementation). Many compilers and operational environments supported. Standard (ISO/IEC 14882) compliance. Maximum efficiency. Exception and thread safety. Debug mode.',
-		license='Other License',
-		url='http://stlport.org',
-	)
+		from setuptools import setup
+		setup(
+			name='STLport',
+			version=version,
 
-	post_process()
+			author='Petr Ovtchenkov',
+			author_email='support@stlport.com',
+			description='Multiplatform C++ Standard Library (STL implementation). Many compilers and operational environments supported. Standard (ISO/IEC 14882) compliance. Maximum efficiency. Exception and thread safety. Debug mode.',
+			license='Other License',
+			url='http://stlport.org',
+		)
 
 
 if __name__ == '__main__':
