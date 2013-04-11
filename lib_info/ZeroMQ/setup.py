@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os, subprocess
+import os, sys, subprocess
 from common import *
 
 
@@ -14,7 +14,7 @@ def build(version):
 		if env.compiler_version > '10.0':
 			shutil.copy2(sln_file % '10', sln_file % '11')
 			sln_file %= '11'
-			subprocess.call(['devenv', sln_file, '/upgrade'])
+			#subprocess.call(['devenv', sln_file, '/upgrade'])
 			clean_list = [
 				r'builds\msvc\Backup',
 				r'builds\msvc\_Upgrade*',
@@ -32,8 +32,8 @@ def build(version):
 			'/p:Configuration=Debug;Platform=x64',
 			'/p:Configuration=Release;Platform=x64',
 		]
-		for param in build_params:
-			subprocess.call(['msbuild', sln_file, '/t:rebuild', param])
+		#for param in build_params:
+		#	subprocess.call(['msbuild', sln_file, '/m', '/t:rebuild', param])
 	else:
 		env.configure()
 		env.make('install')
@@ -62,6 +62,8 @@ def main():
 			license='LGPL',
 			url='http://zeromq.org',
 		)
+	else:
+		sys.exit(1)
 
 
 if __name__ == '__main__':

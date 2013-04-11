@@ -214,30 +214,32 @@ class lib_install(easy_install):
 
 
 	def easy_install(self, spec, deps=False):
-		lib_name = get_lib_name(LIB_INFO_DIR, spec)
+		project_name = get_project_name(LIB_INFO_DIR, spec)
 		try:
-			return easy_install.easy_install(self, lib_name, deps)
+			dist = easy_install.easy_install(self, project_name, deps)
+			generate_import(self.build_directory, project_name, dist.version)
+			return dist
 		except BaseException as e:
 			print('Exception: %r' % e)
 		finally:
-			self.clean_build_files(lib_name)
+			self.clean_build_files(project_name)
 
 
-	def clean_build_files(self, lib_name):
-		setup_base = os.path.join(self.build_directory, lib_name)
+	def clean_build_files(self, project_name):
+		setup_base = os.path.join(self.build_directory, project_name)
 		paths = [
 			os.path.join(setup_base, 'setup.py'),
 			os.path.join(setup_base, 'setup.cfg'),
 			os.path.join(setup_base, 'temp'),
 			os.path.join(setup_base, 'build'),
-			os.path.join(setup_base, lib_name + '.egg-info'),
+			os.path.join(setup_base, project_name + '.egg-info'),
 		]
 		clean_files(paths)
 
 
 	def maybe_move(self, spec, dist_filename, src):
 		dist = get_dist(spec, self.package_index, self.editable, not self.always_copy)
-		basename = '%s-%s' % (spec.project_name, dist.version)
+		basename = get_basename(spec.project_name, dist.version)
 		setup_base = os.path.join(self.build_directory, spec.project_name)
 
 		def maybe_move_instead(src):
@@ -262,7 +264,7 @@ class lib_install(easy_install):
 			ensure_directory(dst)
 
 		move_files(src, dst, shutil.ignore_patterns('.*'))
-		generate_setup(dist, LIB_INFO_DIR, setup_base, basename)
+		generate_setup(LIB_INFO_DIR, spec.project_name, dist.version, setup_base)
 
 		return setup_base
 

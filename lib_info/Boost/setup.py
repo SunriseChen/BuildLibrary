@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os, subprocess
+import os, sys, subprocess
 from common import *
 
 
@@ -16,8 +16,8 @@ def build(version):
 		bootstrap_command = ['./bootstrap.sh', '--prefix=/usr/local/']
 		build_command = ['./b2', 'install']
 
-	subprocess.call(bootstrap_command)
-	subprocess.call(build_command)
+	#subprocess.call(bootstrap_command)
+	#subprocess.call(build_command)
 
 	clean_list = [
 		'bin.v2',
@@ -48,6 +48,8 @@ def main():
 			license='Boost Software License',
 			url='http://www.boost.org',
 		)
+	else:
+		sys.exit(1)
 
 
 if __name__ == '__main__':

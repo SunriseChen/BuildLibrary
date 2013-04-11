@@ -52,12 +52,16 @@ def clean_files(*args):
 			shutil.rmtree(path)
 
 
-def get_lib_name(lib_info_dir, spec):
+def get_project_name(lib_info_dir, spec):
 	for name in os.listdir(lib_info_dir):
 		if spec.lower() == name.lower() and os.path.isdir(os.path.join(lib_info_dir, name)):
 			return name
 
 	return spec
+
+
+def get_basename(project_name, version):
+	return '%s-%s' % (project_name, version)
 
 
 def get_dist(req, env, source, develop_ok):
@@ -71,18 +75,18 @@ def get_dist(req, env, source, develop_ok):
 	raise DistutilsError("Can't get %r" % req)
 
 
-def generate_setup(dist, lib_info_dir, setup_base, basename):
+def generate_setup(lib_info_dir, project_name, version, setup_base):
 	from string import Template
 
-	src_file = os.path.join(lib_info_dir, dist.project_name, 'setup.py')
+	src_file = os.path.join(lib_info_dir, project_name, 'setup.py')
 	setup_script = os.path.join(setup_base, 'setup.py')
 	print('Writing %s' % setup_script)
 	with open(setup_script, 'w') as dst:
 		with open(src_file) as src:
 			for line in src:
 				line = Template(line).safe_substitute(
-					version=dist.version,
-					basename=basename,
+					version=version,
+					basename=get_basename(project_name, version),
 				)
 				dst.write(line)
 
@@ -127,4 +131,16 @@ class Environment(object):
 		cmd += _args_to_list(args)
 
 		return subprocess.call(cmd) if cmd else False
+
+
+def generate_import(build_directory, project_name, version):
+	env = Environment()
+	if env.platform.startswith('win'):
+		source = os.path.join(build_directory, project_name,
+			get_basename(project_name, version))
+		import_link = os.path.join(build_directory, 'Import', project_name)
+		if not os.path.exists(import_link):
+			ensure_directory(import_link)
+			#os.symlink(source, import_link)
+			subprocess.call(['mklink', '/d', import_link, source], shell=True)
 
