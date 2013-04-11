@@ -11,29 +11,31 @@ def build(version):
 	env = Environment()
 	if env.compiler == 'msvc':
 		sln_file = r'builds\msvc\msvc%s.sln'
-		build_params = []
 		if env.compiler_version > '10.0':
 			shutil.copy2(sln_file % '10', sln_file % '11')
-			sln_file = sln_file % '11'
-			build_params += [['/upgrade']]
+			sln_file %= '11'
+			subprocess.call(['devenv', sln_file, '/upgrade'])
+			clean_list = [
+				r'builds\msvc\Backup',
+				r'builds\msvc\_Upgrade*',
+				r'builds\msvc\Upgrade*',
+			]
+			clean_files(clean_list)
 		elif env.compiler_version > '9.0':
-			sln_file = sln_file % '10'
+			sln_file %= '10'
 		else:
-			sln_file = sln_file % ''
+			sln_file %= ''
 
-		build_params += [
-			['/rebuild', '"debug|win32"'],
-			['/rebuild', '"release|win32"'],
-			['/rebuild', '"debug|x64"'],
-			['/rebuild', '"release|x64"'],
+		build_params = [
+			'/p:Configuration=Debug;Platform=Win32',
+			'/p:Configuration=Release;Platform=Win32',
+			'/p:Configuration=Debug;Platform=x64',
+			'/p:Configuration=Release;Platform=x64',
 		]
-		for params in build_params:
-			cmd = ['devenv', sln_file] + params
-			print(cmd)
-			subprocess.call(cmd, shell=True)
+		for param in build_params:
+			subprocess.call(['msbuild', sln_file, '/t:rebuild', param])
 	else:
 		env.configure()
-		#env.make('clean', 'install')
 		env.make('install')
 
 	clean_files('obj')
@@ -48,7 +50,6 @@ def main():
 	os.chdir('$basename')
 	if build(version):
 		os.chdir('..')
-		print(os.path.abspath(os.curdir))
 
 		from setuptools import setup
 		setup(

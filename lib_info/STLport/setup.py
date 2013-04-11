@@ -58,7 +58,6 @@ def build(version):
 		os.chdir('src')
 	else:
 		os.chdir('build/lib')
-	#env.make('clean', 'install')
 	env.make('install')
 
 	clean_files('obj')
@@ -77,7 +76,6 @@ def main():
 	os.chdir('$basename')
 	if build(version):
 		os.chdir('..')
-		print(os.path.abspath(os.curdir))
 
 		from setuptools import setup
 		setup(
