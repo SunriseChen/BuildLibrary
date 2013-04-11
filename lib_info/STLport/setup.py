@@ -58,7 +58,8 @@ def build(version):
 		os.chdir('src')
 	else:
 		os.chdir('build/lib')
-	env.make('clean', 'install')
+	#env.make('clean', 'install')
+	env.make('install')
 
 	clean_files('obj')
 	if version > '5.2.1':
@@ -81,7 +82,7 @@ def main():
 		from setuptools import setup
 		setup(
 			name='STLport',
-			version=version,
+			version='$version',
 
 			author='Petr Ovtchenkov',
 			author_email='support@stlport.com',

@@ -10,15 +10,33 @@ def build(version):
 
 	env = Environment()
 	if env.compiler == 'msvc':
-		sln_file = r'builds\msvc\msvc%s.sln' % (
-			'10' if env.compiler_version > '9.0' else '')
-		build_command = ['vcbuild', '/rebuild', sln_file]
-		subprocess.call(build_command, shell=True)
+		sln_file = r'builds\msvc\msvc%s.sln'
+		build_params = []
+		if env.compiler_version > '10.0':
+			shutil.copy2(sln_file % '10', sln_file % '11')
+			sln_file = sln_file % '11'
+			build_params += [['/upgrade']]
+		elif env.compiler_version > '9.0':
+			sln_file = sln_file % '10'
+		else:
+			sln_file = sln_file % ''
+
+		build_params += [
+			['/rebuild', '"debug|win32"'],
+			['/rebuild', '"release|win32"'],
+			['/rebuild', '"debug|x64"'],
+			['/rebuild', '"release|x64"'],
+		]
+		for params in build_params:
+			cmd = ['devenv', sln_file] + params
+			print(cmd)
+			subprocess.call(cmd, shell=True)
 	else:
 		env.configure()
-		env.make('clean', 'install')
+		#env.make('clean', 'install')
+		env.make('install')
 
-	#clean_files('obj')
+	clean_files('obj')
 
 	return True
 
@@ -35,7 +53,7 @@ def main():
 		from setuptools import setup
 		setup(
 			name='ZeroMQ',
-			version=version,
+			version='$version',
 
 			author='iMatix Corporation',
 			author_email='zeromq-dev@lists.zeromq.org',
