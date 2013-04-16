@@ -9,6 +9,18 @@ from pkg_resources import *
 from SCons.Environment import Environment as _Environment
 
 
+def _args_to_list(args):
+	lst = []
+	if args:
+		for arg in args:
+			if isinstance(arg, list):
+				lst += arg
+			else:
+				lst.append(arg)
+
+	return lst
+
+
 def modify_file(filename, modify_list):
 	if not os.path.isfile(filename):
 		return
@@ -26,18 +38,6 @@ def modify_file(filename, modify_list):
 	f.close()
 
 	shutil.move(f.name, filename)
-
-
-def _args_to_list(args):
-	lst = []
-	if args:
-		for arg in args:
-			if isinstance(arg, list):
-				lst += arg
-			else:
-				lst.append(arg)
-
-	return lst
 
 
 def clean_files(*args):
@@ -60,8 +60,8 @@ def get_project_name(lib_info_dir, spec):
 	return spec
 
 
-def get_basename(project_name, version):
-	return '%s-%s' % (project_name, version)
+def get_lib_name(name, version):
+	return '%s-%s' % (name, version)
 
 
 def get_dist(req, env, source, develop_ok):
@@ -85,12 +85,34 @@ def generate_setup(lib_info_dir, project_name, version, setup_base):
 		with open(src_file) as src:
 			for line in src:
 				line = Template(line).safe_substitute(
+					name=project_name,
 					version=version,
-					basename=get_basename(project_name, version),
+					lib_name=get_lib_name(project_name, version),
 				)
 				dst.write(line)
 
 	return setup_script
+
+
+def generate_import(base_dir, project_name, version):
+	if sys.platform == 'win32':
+		import ntfslink
+
+		source = os.path.join(base_dir, project_name,
+			get_lib_name(project_name, version))
+		import_link = os.path.join(base_dir, 'Import', project_name)
+
+		if os.path.exists(import_link):
+			if os.path.isfile(import_link):
+				os.remove(import_link)
+			elif os.path.islink(import_link):
+				os.rmdir(import_link)
+			else:
+				shutil.rmtree(import_link)
+		else:
+			ensure_directory(import_link)
+
+		os.symlink(source, import_link)
 
 
 class Environment(object):
@@ -131,16 +153,4 @@ class Environment(object):
 		cmd += _args_to_list(args)
 
 		return subprocess.call(cmd) if cmd else False
-
-
-def generate_import(build_directory, project_name, version):
-	env = Environment()
-	if env.platform.startswith('win'):
-		source = os.path.join(build_directory, project_name,
-			get_basename(project_name, version))
-		import_link = os.path.join(build_directory, 'Import', project_name)
-		if not os.path.exists(import_link):
-			ensure_directory(import_link)
-			#os.symlink(source, import_link)
-			subprocess.call(['mklink', '/d', import_link, source], shell=True)
 

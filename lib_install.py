@@ -95,24 +95,24 @@ def move_files(src_dir, dst_dir, ignore=None):
 	for name in names:
 		if name in ignored_names:
 			continue
+
 		src_name = os.path.join(src_dir, name)
 		dst_name = os.path.join(dst_dir, name)
-		if os.path.islink(src_name):
+
+		if os.path.exists(dst_name):
 			if os.path.isfile(dst_name):
 				os.remove(dst_name)
-			elif os.path.isdir(dst_name):
+			elif os.path.islink(dst_name):
+				os.rmdir(dst_name)
+			else:
 				shutil.rmtree(dst_name)
-			linkto = os.readlink(src_name)
-			os.symlink(linkto, dst_name)
+
+		if os.path.islink(src_name):
+			target = os.readlink(src_name)
+			os.symlink(target, dst_name)
 		elif os.path.isdir(src_name):
-			if os.path.isfile(dst_name) or os.path.islink(dst_name):
-				os.remove(dst_name)
 			move_files(src_name, dst_name, ignore)
 		else:
-			if os.path.islink(dst_name):
-				os.remove(dst_name)
-			elif os.path.isdir(dst_name):
-				shutil.rmtree(dst_name)
 			shutil.move(src_name, dst_name)
 
 
@@ -238,33 +238,28 @@ class lib_install(easy_install):
 
 
 	def maybe_move(self, spec, dist_filename, src):
-		dist = get_dist(spec, self.package_index, self.editable, not self.always_copy)
-		basename = get_basename(spec.project_name, dist.version)
-		setup_base = os.path.join(self.build_directory, spec.project_name)
-
-		def maybe_move_instead(src):
+		if os.path.isdir(dist_filename):
+			src = dist_filename
+		else:
+			if os.path.dirname(dist_filename)==src:
+				os.unlink(dist_filename)	# get it out of the tmp dir
 			contents = os.listdir(src)
 			if len(contents)==1:
 				dist_filename = os.path.join(src,contents[0])
 				if os.path.isdir(dist_filename):
 					# if the only thing there is a directory, move it instead
 					src = dist_filename
-			return src
 
-		dst = os.path.join(setup_base, basename)
-		if os.path.exists(dst):
-			src = maybe_move_instead(src)
-		else:
-			if os.path.isdir(dist_filename):
-				src = dist_filename
-			else:
-				if os.path.dirname(dist_filename)==src:
-					os.unlink(dist_filename)	# get it out of the tmp dir
-				src = maybe_move_instead(src)
-			ensure_directory(dst)
+		dist = get_dist(spec, self.package_index, self.editable,
+			not self.always_copy)
+		lib_name = get_lib_name(spec.project_name, dist.version)
+		setup_base = os.path.join(self.build_directory, spec.project_name)
+		dst = os.path.join(setup_base, lib_name)
 
+		ensure_directory(dst)
 		move_files(src, dst, shutil.ignore_patterns('.*'))
-		generate_setup(LIB_INFO_DIR, spec.project_name, dist.version, setup_base)
+		generate_setup(LIB_INFO_DIR, spec.project_name, dist.version,
+			setup_base)
 
 		return setup_base
 
