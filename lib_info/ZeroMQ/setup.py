@@ -6,15 +6,13 @@ from common import *
 
 
 def build(version):
-	print('Install ZeroMQ...')
-
 	env = Environment()
 	if env.compiler == 'msvc':
 		sln_file = r'builds\msvc\msvc%s.sln'
 		if env.compiler_version > '10.0':
 			shutil.copy2(sln_file % '10', sln_file % '11')
 			sln_file %= '11'
-			#subprocess.call(['devenv', sln_file, '/upgrade'])
+			subprocess.call(['devenv', sln_file, '/upgrade'])
 			clean_list = [
 				r'builds\msvc\Backup',
 				r'builds\msvc\_Upgrade*',
@@ -32,8 +30,8 @@ def build(version):
 			'/p:Configuration=Debug;Platform=x64',
 			'/p:Configuration=Release;Platform=x64',
 		]
-		#for param in build_params:
-		#	subprocess.call(['msbuild', sln_file, '/m', '/t:rebuild', param])
+		for param in build_params:
+			subprocess.call(['msbuild', sln_file, '/m', '/t:rebuild', param])
 	else:
 		env.configure()
 		env.make('install')
@@ -46,15 +44,18 @@ def build(version):
 def main():
 	from distutils.version import LooseVersion
 
+	name = '$name'
 	version = LooseVersion('$version')
-	os.chdir('$basename')
+	os.chdir('$lib_name')
+
+	print('Building %s %s ...' % (name, version))
 	if build(version):
 		os.chdir('..')
 
 		from setuptools import setup
 		setup(
-			name='ZeroMQ',
-			version='$version',
+			name=name,
+			version=str(version),
 
 			author='iMatix Corporation',
 			author_email='zeromq-dev@lists.zeromq.org',

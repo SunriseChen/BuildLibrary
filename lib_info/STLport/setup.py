@@ -35,8 +35,6 @@ def fix_stlport6(base_dir):
 
 
 def build(version):
-	print('Install STLport...')
-
 	base_dir = os.path.abspath(os.curdir)
 	config_parameter = []
 
@@ -51,14 +49,14 @@ def build(version):
 			config_parameter.append('msvc' + env.compiler_version[0])
 
 	config_parameter += ['--with-static-rtl', '--with-dynamic-rtl']
-	#env.configure(config_parameter)
+	env.configure(config_parameter)
 
 	if version > '5.2.1':
 		fix_stlport6(base_dir)
 		os.chdir('src')
 	else:
 		os.chdir('build/lib')
-	#env.make('install')
+	env.make('install')
 
 	clean_files('obj')
 	if version > '5.2.1':
@@ -72,15 +70,18 @@ def build(version):
 def main():
 	from distutils.version import LooseVersion
 
+	name = '$name'
 	version = LooseVersion('$version')
-	os.chdir('$basename')
+	os.chdir('$lib_name')
+
+	print('Building %s %s ...' % (name, version))
 	if build(version):
 		os.chdir('..')
 
 		from setuptools import setup
 		setup(
-			name='STLport',
-			version='$version',
+			name=name,
+			version=str(version),
 
 			author='Petr Ovtchenkov',
 			author_email='support@stlport.com',

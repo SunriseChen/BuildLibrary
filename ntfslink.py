@@ -10,14 +10,14 @@ except ImportError:
 
 
 	def GetFileAttributes(fileName):
-		if type(fileName) != unicode:
+		if not isinstance(fileName, unicode):
 			fileName = unicode(fileName)
 		return windll.kernel32.GetFileAttributesW(fileName)
 
 
 	def CreateFile(fileName, desiredAccess, shareMode, securityAttributes,
 		creationDisposition, flagsAndAttributes, templateFile):
-		if type(fileName) != unicode:
+		if not isinstance(fileName, unicode):
 			fileName = unicode(fileName)
 		return windll.kernel32.CreateFileW(fileName, desiredAccess, shareMode,
 			securityAttributes, creationDisposition, flagsAndAttributes, templateFile)
@@ -57,9 +57,9 @@ except ImportError:
 
 
 	def CreateSymbolicLink(symlinkFileName, targetFileName, flags):
-		if type(symlinkFileName) != unicode:
+		if not isinstance(symlinkFileName, unicode):
 			symlinkFileName = unicode(symlinkFileName)
-		if type(targetFileName) != unicode:
+		if not isinstance(targetFileName, unicode):
 			targetFileName = unicode(targetFileName)
 		return windll.kernel32.CreateSymbolicLinkW(symlinkFileName,
 			targetFileName, flags)
@@ -150,7 +150,7 @@ def readlink(path):
 	if target.startswith(u'\\\\?\\'):
 		target = target[4:]
 
-	return target if type(path) == unicode else str(target)
+	return target if isinstance(path, unicode) else str(target)
 
 
 if not callable(getattr(os, 'readlink', None)) and supports_symlinks():

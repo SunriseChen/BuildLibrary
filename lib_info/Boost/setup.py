@@ -6,18 +6,16 @@ from common import *
 
 
 def build(version):
-	print('Install Boost...')
-
-	bootstrap_command = ['bootstrap.bat']
-	build_command = ['b2.exe']
+	bootstrap_command = ['./bootstrap.sh', '--prefix=/usr/local/']
+	build_command = ['./b2', 'install']
 
 	env = Environment()
-	if not env.platform.startswith('win'):
-		bootstrap_command = ['./bootstrap.sh', '--prefix=/usr/local/']
-		build_command = ['./b2', 'install']
+	if env.platform == 'win32':
+		bootstrap_command = ['bootstrap.bat']
+		build_command = ['b2.exe']
 
-	#subprocess.call(bootstrap_command)
-	#subprocess.call(build_command)
+	subprocess.call(bootstrap_command)
+	subprocess.call(build_command)
 
 	clean_list = [
 		'bin.v2',
@@ -32,15 +30,18 @@ def build(version):
 def main():
 	from distutils.version import LooseVersion
 
+	name = '$name'
 	version = LooseVersion('$version')
-	os.chdir('$basename')
+	os.chdir('$lib_name')
+
+	print('Building %s %s ...' % (name, version))
 	if build(version):
 		os.chdir('..')
 
 		from setuptools import setup
 		setup(
-			name='Boost',
-			version='$version',
+			name=name,
+			version=str(version),
 
 			author='Boost',
 			author_email=' ',
