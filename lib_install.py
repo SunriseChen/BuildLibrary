@@ -8,6 +8,7 @@ DEFAULT_URL     = 'https://github.com/SunriseChen/BuildLibrary/archive/master.zi
 PACK_FILE_ROOT_DIR = 'BuildLibrary-master'
 
 SETUPTOOLS_URL = 'http://python-distribute.org/distribute_setup.py'
+PYTHON_ENV = 'pyenv'
 LIB_INFO_DIR = 'lib_info'
 
 TEMP_DIR_PREFIX = 'lib_install-'
@@ -57,12 +58,107 @@ def check_setuptools(times=3):
 		sys.exit(1)
 
 
+def install_virtualenv():
+	print('Install virtualenv...')
+	if subprocess.call(['easy_install', 'virtualenv']) == 0:
+		restart()
+
+
+def virtual_run(commands):
+	suffix = '.bat' if sys.platform == 'win32' else '.sh'
+	fd, path = tempfile.mkstemp(suffix=suffix, dir=os.curdir)
+	try:
+		f = os.fdopen(fd, 'w')
+		if not isinstance(commands, list):
+			commands = [commands]
+
+		if sys.platform == 'win32':
+			commands.insert(0, '@echo off')
+			commands.insert(1, 'call %s/Scripts/activate.bat' % PYTHON_ENV)
+			commands.append('call %s/Scripts/deactivate.bat' % PYTHON_ENV)
+		else:
+			commands.insert(0, 'source %s/bin/activate' % PYTHON_ENV)
+			commands.append('%s/bin/deactivate' % PYTHON_ENV)
+
+		commands = os.linesep.join(commands)
+		f.write(commands)
+		f.close()
+
+		return subprocess.call([path])
+	finally:
+		if os.path.exists(path):
+			os.remove(path)
+
+
+def validate_pair(ob):
+	try:
+		if not (len(ob) == 2):
+			print("Unexpected result:", ob)#, file=sys.stderr)
+			raise ValueError
+	except:
+		return False
+	return True
+
+def consume(iter):
+	try:
+		while True: next(iter)
+	except StopIteration:
+		pass
+
+def get_environment_from_batch_command(env_cmd, initial=None):
+	"""
+	Take a command (either a single command or list of arguments)
+	and return the environment created after running that command.
+	Note that if the command must be a batch file or .cmd file, or the
+	changes to the environment will not be captured.
+
+	If initial is supplied, it is used as the initial environment passed
+	to the child process.
+	"""
+	if not isinstance(env_cmd, (list, tuple)):
+		env_cmd = [env_cmd]
+	# construct the command that will alter the environment
+	env_cmd = subprocess.list2cmdline(env_cmd)
+	# create a tag so we can tell in the output when the proc is done
+	tag = 'Done running command'
+	# construct a cmd.exe command to do accomplish this
+	cmd = 'cmd.exe /s /c "{env_cmd} && echo "{tag}" && set"'.format(**vars())
+	# launch the process
+	proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, env=initial)
+	# parse the output sent to stdout
+	lines = proc.stdout
+	# consume whatever output occurs until the tag is reached
+	consume(itertools.takewhile(lambda l: tag not in l, lines))
+	# define a way to handle each KEY=VALUE line
+	handle_line = lambda l: l.rstrip().split('=',1)
+	# parse key/values into pairs
+	pairs = map(handle_line, lines)
+	# make sure the pairs are valid
+	valid_pairs = filter(validate_pair, pairs)
+	# construct a dictionary of the pairs
+	result = dict(valid_pairs)
+	# let the process finish
+	proc.communicate()
+	return result
+
+
+def check_virtualenv(times=3):
+	for i in range(times):
+		try:
+			import virtualenv
+			if not os.path.exists(PYTHON_ENV):
+				subprocess.call(['virtualenv', '--distribute', PYTHON_ENV])
+			break
+		except ImportError:
+			install_virtualenv()
+	else:
+		print('Install virtualenv fail!')
+		sys.exit(1)
+
+
 def install_scons():
 	print('Install SCons...')
-	cmd = ['easy_install', 'SCons']
-	if not sys.platform.startswith('win'):
-		cmd[0] = os.path.join('/usr/bin', cmd[0])
-	subprocess.call(cmd)
+	virtual_run('pip install SCons')
 
 
 def check_scons(times=3):
@@ -145,7 +241,9 @@ def update_self():
 
 def check_env():
 	check_setuptools()
+	check_virtualenv()
 	check_scons()
+	sys.exit()
 	update_self()
 
 
