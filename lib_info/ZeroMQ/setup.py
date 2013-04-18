@@ -2,10 +2,18 @@
 # -*- coding: utf-8 -*-
 
 import os, sys, subprocess
+from setuptools.package_index import PackageIndex
 from common import *
 
+ZMQ_HPP_URL = 'https://raw.github.com/zeromq/cppzmq/master/zmq.hpp'
 
 def build(version):
+	zmq_hpp = PackageIndex().download(ZMQ_HPP_URL, 'include')
+	if os.path.exists(zmq_hpp):
+		print('Downloaded.')
+	else:
+		return False
+
 	env = Environment()
 	if env.compiler == 'msvc':
 		sln_file = r'builds\msvc\msvc%s.sln'
