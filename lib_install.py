@@ -15,27 +15,27 @@ TEMP_DIR_PREFIX = 'lib_install-'
 PTH_FILE_NAME = 'lib-install.pth'
 
 
-def download_file(url, target_dir=os.curdir):
-	import urllib2
-
-	print('Downloading %s' % url)
-	remote_file = urllib2.urlopen(url)
-
-	if not os.path.exists(target_dir):
-		os.makedirs(target_dir)
-	file_name = os.path.basename(url)
-	file_path = os.path.join(target_dir, file_name)
-	with open(file_path, 'wb') as local_file:
-		local_file.write(remote_file.read())
-
-	remote_file.close()
-	print('Downloaded.')
-
-	return os.path.realpath(file_path)
+def check_python():
+	if sys.version_info[0] == 2 and sys.version_info[1] >= 5:
+		return
+	print('''This python version is not supported.
+Please use python 2.5, 2.6 or 2.7''')
+	sys.exit(1)
 
 
-def restart(with_virtualenv=False):
-	if with_virtualenv:
+def has_virtualenv():
+	return os.path.exists(PYTHON_ENV)
+
+
+def is_virtualenv():
+	return os.getenv('VIRTUAL_ENV') == os.path.abspath(PYTHON_ENV)
+
+
+def restart(with_virtualenv=True, updated=True):
+	if updated:
+		sys.argv.insert(1, '--updated')
+
+	if with_virtualenv and not is_virtualenv():
 		if sys.platform == 'win32':
 			batch_file = 'lib_install.bat'
 			commands = [
@@ -66,78 +66,23 @@ def restart(with_virtualenv=False):
 	sys.exit(0)
 
 
-def check_python():
-	pass
+def download_file(url, target_dir=os.curdir):
+	import urllib2
 
+	print('Downloading %s' % url)
+	remote_file = urllib2.urlopen(url)
 
-def install_setuptools():
-	print('Installing setuptools ...')
-	setuptools = download_file(SETUPTOOLS_URL)
-	if subprocess.call(['python', setuptools]) == 0:
-		restart()
+	if not os.path.exists(target_dir):
+		os.makedirs(target_dir)
+	file_name = os.path.basename(url)
+	file_path = os.path.join(target_dir, file_name)
+	with open(file_path, 'wb') as local_file:
+		local_file.write(remote_file.read())
 
+	remote_file.close()
+	print('Downloaded.')
 
-def check_setuptools(times=3):
-	for i in range(times):
-		try:
-			import setuptools
-			break
-		except ImportError:
-			install_setuptools()
-	else:
-		print('Install setuptools fail!')
-		sys.exit(1)
-
-
-def install_virtualenv():
-	print('Installing virtualenv ...')
-	return subprocess.call(['easy_install', 'virtualenv']) == 0
-
-
-def check_virtualenv(times=3):
-	if os.getenv('VIRTUAL_ENV') == os.path.abspath(PYTHON_ENV):
-		return
-
-	for i in range(times):
-		try:
-			import virtualenv
-			break
-		except ImportError:
-			if install_virtualenv():
-				break
-	else:
-		print('Install virtualenv fail!')
-		sys.exit(1)
-
-	if not os.path.exists(PYTHON_ENV):
-		subprocess.call(['virtualenv', '--distribute', PYTHON_ENV])
-	sys.argv.insert(1, '--updated')
-	restart(with_virtualenv=True)
-
-
-def install_scons():
-	print('Installing SCons ...')
-	if subprocess.call(['easy_install', 'SCons']) == 0:
-		sys.argv.insert(1, '--updated')
-		restart()
-
-
-def check_scons(times=3):
-	import re
-
-	for i in range(times):
-		try:
-			import pkg_resources
-			d = pkg_resources.get_distribution('scons')
-			path = '%s/scons-%s' % (d.location, d.version)
-			sys.path.insert(0, path)
-			import SCons
-			break
-		except (pkg_resources.DistributionNotFound, ImportError):
-			install_scons()
-	else:
-		print('Install SCons fail!')
-		sys.exit(1)
+	return os.path.realpath(file_path)
 
 
 def move_files(src_dir, dst_dir, ignore=None):
@@ -194,10 +139,73 @@ def update_self():
 
 	if len(sys.argv) == 1:
 		# only update self.
-		sys.exit()
+		sys.exit(0)
 	else:
-		sys.argv.insert(1, '--updated')
+		restart(with_virtualenv=False)
+
+
+def install_setuptools():
+	print('Installing setuptools ...')
+	setuptools = download_file(SETUPTOOLS_URL)
+	if subprocess.call(['python', setuptools]) == 0:
+		restart(with_virtualenv=False, updated=False)
+
+
+def check_setuptools(times=3):
+	for i in range(times):
+		try:
+			import setuptools
+			break
+		except ImportError:
+			install_setuptools()
+	else:
+		print('Install setuptools fail!')
+		sys.exit(1)
+
+
+def install_virtualenv():
+	print('Installing virtualenv ...')
+	try:
+		import virtualenv
+	except ImportError:
+		subprocess.call(['easy_install', 'virtualenv'])
+	if subprocess.call(['virtualenv', '--distribute', PYTHON_ENV]) == 0:
 		restart()
+
+
+def check_virtualenv(times=3):
+	if is_virtualenv():
+		return
+	elif has_virtualenv():
+		restart()
+
+	for i in range(times):
+		install_virtualenv()
+	else:
+		print('Install virtualenv fail!')
+		sys.exit(1)
+
+
+def install_scons():
+	print('Installing SCons ...')
+	if subprocess.call(['easy_install', 'SCons']) == 0:
+		restart()
+
+
+def check_scons(times=3):
+	for i in range(times):
+		try:
+			import pkg_resources
+			d = pkg_resources.get_distribution('scons')
+			path = '%s/scons-%s' % (d.location, d.version)
+			sys.path.insert(0, path)
+			import SCons
+			break
+		except (pkg_resources.DistributionNotFound, ImportError):
+			install_scons()
+	else:
+		print('Install SCons fail!')
+		sys.exit(1)
 
 
 def check_env():
