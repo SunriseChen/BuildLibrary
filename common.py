@@ -94,27 +94,6 @@ def generate_setup(lib_info_dir, project_name, version, setup_base):
 	return setup_script
 
 
-def generate_import(base_dir, project_name, version):
-	if sys.platform == 'win32':
-		import ntfslink
-
-		source = os.path.join(base_dir, project_name,
-			get_lib_name(project_name, version))
-		import_link = os.path.join(base_dir, 'Import', project_name)
-
-		if os.path.exists(import_link):
-			if os.path.isfile(import_link):
-				os.remove(import_link)
-			elif os.path.islink(import_link):
-				os.rmdir(import_link)
-			else:
-				shutil.rmtree(import_link)
-		else:
-			ensure_directory(import_link)
-
-		os.symlink(source, import_link)
-
-
 class Environment(object):
 	def __init__(self):
 		env = _Environment()
@@ -153,4 +132,32 @@ class Environment(object):
 		cmd += _args_to_list(args)
 
 		return subprocess.call(cmd) if cmd else False
+
+
+def generate_import(base_dir, project_name, version):
+	env = Environment()
+	if env.platform == 'win32':
+		import ntfslink
+
+		source = os.path.join(base_dir, project_name,
+			get_lib_name(project_name, version))
+		import_link = os.path.join(base_dir, 'Import', project_name)
+
+		if os.path.exists(import_link):
+			if os.path.isfile(import_link):
+				os.remove(import_link)
+			elif os.path.islink(import_link):
+				os.rmdir(import_link)
+			else:
+				shutil.rmtree(import_link)
+		else:
+			ensure_directory(import_link)
+
+		os.symlink(source, import_link)
+
+	if env.compiler == 'msvc':
+		paths = [
+			os.path.expanduser(r'~\AppData\Local\Microsoft\MSBuild\v4.0'),
+			os.path.expandvars('$ProgramFiles(x86)') + r'\MSBuild\Microsoft.Cpp\v4.0',
+		]
 
