@@ -1,7 +1,8 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os, sys, subprocess, tempfile, shutil
+import os, sys, subprocess, tempfile, shutil, re
+from string import Template
 from distutils import ccompiler
 from distutils.version import StrictVersion
 from distutils.errors import *
@@ -33,9 +34,8 @@ def modify_file(filename, modify_list):
 		if m[1] not in text:
 			text = m[0].sub(m[1], text)
 
-	f = tempfile.NamedTemporaryFile('a', delete=False)
-	f.write(text)
-	f.close()
+	with tempfile.NamedTemporaryFile('w', delete=False) as f:
+		f.write(text)
 
 	shutil.move(f.name, filename)
 
@@ -76,8 +76,6 @@ def get_dist(req, env, source, develop_ok):
 
 
 def generate_setup(lib_info_dir, project_name, version, setup_base):
-	from string import Template
-
 	src_file = os.path.join(lib_info_dir, project_name, 'setup.py')
 	setup_script = os.path.join(setup_base, 'setup.py')
 	print('Writing %s' % setup_script)
@@ -134,14 +132,68 @@ class Environment(object):
 		return subprocess.call(cmd) if cmd else False
 
 
-def generate_import(base_dir, project_name, version):
+def generate_settings(import_dir, include_path, library_path):
+	settings_file = os.path.join(import_dir, 'local_settings.py')
+	if not os.path.exists(settings_file):
+		with open(settings_file, 'w') as f:
+			f.write('''#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+include_path = [
+	# Insert include path here!
+]
+
+library_path = [
+	# Insert library path here!
+]
+''')
+
+	def list_line(path):
+		return '\t%r,' % path
+
+	modify_list = []
+	if include_path:
+		include_path = '\n'.join(map(list_line, include_path))
+		modify_list.append(
+			(re.compile(r'^\s+# Insert include path here!$', re.M),
+			'%s\n\t# Insert include path here!' % include_path))
+	if library_path:
+		library_path = '\n'.join(map(list_line, library_path))
+		modify_list.append(
+			(re.compile(r'^\s+# Insert library path here!$', re.M),
+			'%s\n\t# Insert library path here!' % library_path))
+	modify_file(settings_file, modify_list)
+
+
+def generate_props(lib_info_dir, import_dir, include_path, library_path):
+	props_file = os.path.join(import_dir, 'Library.props')
+	if not os.path.exists(props_file):
+		sample_file = os.path.join(lib_info_dir, 'Library.props.sample')
+		shutil.copy(sample_file, props_file)
+
+	modify_list = []
+	if include_path:
+		modify_list.append(
+			(re.compile(r'\$\(IncludePath\)</IncludePath>$', re.M),
+			'%s;$(IncludePath)</IncludePath>' % ';'.join(include_path)))
+	if library_path:
+		modify_list.append(
+			(re.compile(r'\$\(LibraryPath\)</LibraryPath>$', re.M),
+			'%s;$(LibraryPath)</LibraryPath>' % ';'.join(library_path)))
+	print(modify_list)
+	modify_file(props_file, modify_list)
+
+
+def generate_import(lib_info_dir, project_name, version, base_dir):
+	lib_dir = os.path.join(base_dir, project_name,
+		get_lib_name(project_name, version))
+	import_dir = os.path.join(base_dir, 'Import')
+
 	env = Environment()
 	if env.platform == 'win32':
 		import ntfslink
 
-		source = os.path.join(base_dir, project_name,
-			get_lib_name(project_name, version))
-		import_link = os.path.join(base_dir, 'Import', project_name)
+		import_link = os.path.join(import_dir, project_name)
 
 		if os.path.exists(import_link):
 			if os.path.isfile(import_link):
@@ -153,11 +205,19 @@ def generate_import(base_dir, project_name, version):
 		else:
 			ensure_directory(import_link)
 
-		os.symlink(source, import_link)
+		os.symlink(lib_dir, import_link)
 
-	if env.compiler == 'msvc':
-		paths = [
-			os.path.expanduser(r'~\AppData\Local\Microsoft\MSBuild\v4.0'),
-			os.path.expandvars('$ProgramFiles(x86)') + r'\MSBuild\Microsoft.Cpp\v4.0',
-		]
+	include_path = os.getenv('INCLUDE_PATH', '').split(os.pathsep)
+	library_path = os.getenv('LIBRARY_PATH', '').split(os.pathsep)
 
+	if include_path or library_path:
+		def abspath(path):
+			return os.path.abspath(os.path.join(lib_dir, path)).replace('\\', '\\\\')
+
+		include_path = map(abspath, include_path)
+		library_path = map(abspath, library_path)
+
+		generate_settings(import_dir, include_path, library_path)
+
+		if env.compiler == 'msvc':
+			generate_props(lib_info_dir, import_dir, include_path, library_path)

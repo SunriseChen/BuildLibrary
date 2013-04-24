@@ -16,10 +16,10 @@ PTH_FILE_NAME = 'lib-install.pth'
 
 
 def check_python():
-	if sys.version_info[0] == 2 and sys.version_info[1] >= 5:
+	if sys.version_info[0] == 2 and sys.version_info[1] >= 6:
 		return
 	print('''This python version is not supported.
-Please use python 2.5, 2.6 or 2.7''')
+Please use python 2.6 or 2.7''')
 	sys.exit(1)
 
 
@@ -284,7 +284,7 @@ class lib_install(easy_install):
 		project_name = get_project_name(LIB_INFO_DIR, spec)
 		try:
 			dist = easy_install.easy_install(self, project_name, deps)
-			generate_import(self.build_directory, project_name, dist.version)
+			generate_import(LIB_INFO_DIR, project_name, dist.version, self.build_directory)
 			return dist
 		except BaseException as e:
 			print('Exception: %r' % e)
