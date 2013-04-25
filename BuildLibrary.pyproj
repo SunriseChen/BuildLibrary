@@ -39,6 +39,7 @@
     <Compile Include="lib_info\STLport\setup.py" />
     <Content Include="lib_info\Boost\index.html" />
     <Content Include="lib_info\index.html.sample" />
+    <Content Include="lib_info\Library.props.sample" />
     <Content Include="lib_info\ZeroMQ\index.html" />
     <Content Include="readme.txt" />
     <Content Include="lib_info\STLport\index.html" />

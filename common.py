@@ -180,8 +180,11 @@ def generate_props(lib_info_dir, import_dir, include_path, library_path):
 
 	if include:
 		curr_include_path = include.text.split(';')
-		for path in curr_include_path:
-			path
+		tag = '%s\\%s-' % project_name
+		include_path = [p for p in curr_include_path
+			if (p != '$(IncludePath)' and tag not in p)
+		] + include_path
+		include_path.append('$(IncludePath)')
 
 	modify_list = []
 	if include_path:
