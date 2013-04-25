@@ -38,13 +38,20 @@ def build(version):
 			'/p:Configuration=Debug;Platform=x64',
 			'/p:Configuration=Release;Platform=x64',
 		]
-		for param in build_params:
-			subprocess.call(['msbuild', sln_file, '/m', '/t:rebuild', param])
+		#for param in build_params:
+		#	subprocess.call(['msbuild', sln_file, '/m', '/t:rebuild', param])
 	else:
 		env.configure()
 		env.make('install')
 
 	clean_files('obj')
+
+	os.environ['INCLUDE_PATH'] = os.pathsep.join([
+		'include',
+	])
+	os.environ['LIBRARY_PATH'] = os.pathsep.join([
+		'lib',
+	])
 
 	return True
 

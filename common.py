@@ -166,10 +166,22 @@ library_path = [
 
 
 def generate_props(lib_info_dir, import_dir, include_path, library_path):
+	from xml.etree.ElementTree import ElementTree
+
 	props_file = os.path.join(import_dir, 'Library.props')
 	if not os.path.exists(props_file):
 		sample_file = os.path.join(lib_info_dir, 'Library.props.sample')
 		shutil.copy(sample_file, props_file)
+
+	root = ElementTree()
+	root = root.parse(pros_file)
+	include = root.find('PropertyGroup/IncludePath')
+	library = root.find('PropertyGroup/LibraryPath')
+
+	if include:
+		curr_include_path = include.text.split(';')
+		for path in curr_include_path:
+			path
 
 	modify_list = []
 	if include_path:

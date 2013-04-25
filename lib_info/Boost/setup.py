@@ -14,8 +14,8 @@ def build(version):
 		bootstrap_command = ['bootstrap.bat']
 		build_command = ['b2.exe']
 
-	subprocess.call(bootstrap_command)
-	subprocess.call(build_command)
+	#subprocess.call(bootstrap_command)
+	#subprocess.call(build_command)
 
 	clean_list = [
 		'bin.v2',
@@ -23,6 +23,13 @@ def build(version):
 		'tools/build/v2/engine/bootstrap',
 	]
 	clean_files(clean_list)
+
+	os.environ['INCLUDE_PATH'] = os.pathsep.join([
+		'.',
+	])
+	os.environ['LIBRARY_PATH'] = os.pathsep.join([
+		'stage/lib',
+	])
 
 	return True
 
