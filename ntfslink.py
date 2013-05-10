@@ -168,3 +168,20 @@ def symlink(source, link_name):
 if not callable(getattr(os, 'symlink', None)) and supports_symlinks():
 	os.symlink = symlink
 
+
+def test():
+	path = 'test_dir'
+	os.mkdir(path)
+	assert not islink(path)
+	link_name = 'link_dir'
+	symlink(path, link_name)
+	assert islink(link_name)
+	result = readlink(link_name)
+	assert result == path, result
+	os.rmdir(link_name)
+	os.rmdir(path)
+	print('Test passed !')
+
+
+if __name__ == '__main__':
+	test()
