@@ -165,7 +165,7 @@ library_path = [
 	modify_file(settings_file, modify_list)
 
 
-def generate_props(lib_info_dir, import_dir, include_path, library_path):
+def generate_props(lib_info_dir, project_name, import_dir, include_path, library_path):
 	from xml.etree.ElementTree import ElementTree
 
 	props_file = os.path.join(import_dir, 'Library.props')
@@ -173,18 +173,23 @@ def generate_props(lib_info_dir, import_dir, include_path, library_path):
 		sample_file = os.path.join(lib_info_dir, 'Library.props.sample')
 		shutil.copy(sample_file, props_file)
 
-	root = ElementTree()
-	root = root.parse(pros_file)
-	include = root.find('PropertyGroup/IncludePath')
-	library = root.find('PropertyGroup/LibraryPath')
+	tree = ElementTree()
+	root = tree.parse(props_file)
+	xmlns = root.tag.split('}')[0] + '}'
+	include = root.find('%sPropertyGroup/%sIncludePath' % (xmlns, xmlns))
+	library = root.find('%sPropertyGroup/%sLibraryPath' % (xmlns, xmlns))
 
-	if include:
+	if include is not None:
 		curr_include_path = include.text.split(';')
-		tag = '%s\\%s-' % project_name
+		tag = '%s\\%s-' % (project_name, project_name)
 		include_path = [p for p in curr_include_path
 			if (p != '$(IncludePath)' and tag not in p)
 		] + include_path
 		include_path.append('$(IncludePath)')
+		print(include_path)
+		include.text = ';'.join(include_path)
+
+	tree.write(props_file)
 
 	modify_list = []
 	if include_path:
@@ -195,8 +200,8 @@ def generate_props(lib_info_dir, import_dir, include_path, library_path):
 		modify_list.append(
 			(re.compile(r'\$\(LibraryPath\)</LibraryPath>$', re.M),
 			'%s;$(LibraryPath)</LibraryPath>' % ';'.join(library_path)))
-	print(modify_list)
-	modify_file(props_file, modify_list)
+	#print(modify_list)
+	#modify_file(props_file, modify_list)
 
 
 def generate_import(lib_info_dir, project_name, version, base_dir):
@@ -235,4 +240,4 @@ def generate_import(lib_info_dir, project_name, version, base_dir):
 		generate_settings(import_dir, include_path, library_path)
 
 		if env.compiler == 'msvc':
-			generate_props(lib_info_dir, import_dir, include_path, library_path)
+			generate_props(lib_info_dir, project_name, import_dir, include_path, library_path)

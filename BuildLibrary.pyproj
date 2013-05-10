@@ -17,7 +17,8 @@
     <RootNamespace>BuildLibrary</RootNamespace>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <CommandLineArguments>--updated stlport zeromq</CommandLineArguments>
-    <InterpreterPath>C:\Users\Administrator\Documents\GitHub\BuildLibrary\env\Scripts\python.exe</InterpreterPath>
+    <InterpreterPath>
+    </InterpreterPath>
     <InterpreterArguments />
     <VirtualEnvEnabled>env</VirtualEnvEnabled>
   </PropertyGroup>
@@ -37,6 +38,7 @@
     <Compile Include="ntfslink.py" />
     <Compile Include="settings.py" />
     <Compile Include="lib_info\STLport\setup.py" />
+    <Compile Include="xmltools.py" />
     <Content Include="lib_info\Boost\index.html" />
     <Content Include="lib_info\index.html.sample" />
     <Content Include="lib_info\Library.props.sample" />
