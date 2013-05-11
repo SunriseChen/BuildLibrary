@@ -149,7 +149,7 @@ library_path = [
 ''')
 
 	def list_line(path):
-		return '\t%r,' % path
+		return '\t%r,' % path.replace('\\', '\\\\')
 
 	modify_list = []
 	if include_path:
@@ -166,42 +166,35 @@ library_path = [
 
 
 def generate_props(lib_info_dir, project_name, import_dir, include_path, library_path):
-	from xml.etree.ElementTree import ElementTree
+	from xmltools import get_namespace, namespace_path
+	from xml.etree import ElementTree as etree
 
 	props_file = os.path.join(import_dir, 'Library.props')
 	if not os.path.exists(props_file):
 		sample_file = os.path.join(lib_info_dir, 'Library.props.sample')
 		shutil.copy(sample_file, props_file)
 
-	tree = ElementTree()
+	tree = etree.ElementTree()
 	root = tree.parse(props_file)
-	xmlns = root.tag.split('}')[0] + '}'
-	include = root.find('%sPropertyGroup/%sIncludePath' % (xmlns, xmlns))
-	library = root.find('%sPropertyGroup/%sLibraryPath' % (xmlns, xmlns))
+	uri = get_namespace(root)
+	etree.register_namespace('', uri)
+	include = root.find(namespace_path(uri, 'PropertyGroup/IncludePath'))
+	library = root.find(namespace_path(uri, 'PropertyGroup/LibraryPath'))
 
-	if include is not None:
-		curr_include_path = include.text.split(';')
-		tag = '%s\\%s-' % (project_name, project_name)
-		include_path = [p for p in curr_include_path
-			if (p != '$(IncludePath)' and tag not in p)
-		] + include_path
-		include_path.append('$(IncludePath)')
-		print(include_path)
-		include.text = ';'.join(include_path)
+	def modify_path(element, path, project_name, path_macro):
+		if element is not None:
+			curr_path = element.text.split(';')
+			tag = '%s\\%s-' % (project_name, project_name)
+			path = [
+				p for p in curr_path if (p != path_macro and tag not in p)
+			] + path
+			path.append(path_macro)
+			element.text = ';'.join(path)
 
-	tree.write(props_file)
+	modify_path(include, include_path, project_name, '$(IncludePath)')
+	modify_path(library, library_path, project_name, '$(LibraryPath)')
 
-	modify_list = []
-	if include_path:
-		modify_list.append(
-			(re.compile(r'\$\(IncludePath\)</IncludePath>$', re.M),
-			'%s;$(IncludePath)</IncludePath>' % ';'.join(include_path)))
-	if library_path:
-		modify_list.append(
-			(re.compile(r'\$\(LibraryPath\)</LibraryPath>$', re.M),
-			'%s;$(LibraryPath)</LibraryPath>' % ';'.join(library_path)))
-	#print(modify_list)
-	#modify_file(props_file, modify_list)
+	tree.write(props_file, 'utf-8', True)
 
 
 def generate_import(lib_info_dir, project_name, version, base_dir):
@@ -232,7 +225,7 @@ def generate_import(lib_info_dir, project_name, version, base_dir):
 
 	if include_path or library_path:
 		def abspath(path):
-			return os.path.abspath(os.path.join(lib_dir, path)).replace('\\', '\\\\')
+			return os.path.abspath(os.path.join(lib_dir, path))
 
 		include_path = map(abspath, include_path)
 		library_path = map(abspath, library_path)
@@ -241,3 +234,11 @@ def generate_import(lib_info_dir, project_name, version, base_dir):
 
 		if env.compiler == 'msvc':
 			generate_props(lib_info_dir, project_name, import_dir, include_path, library_path)
+
+
+def test():
+	print('Test passed !')
+
+
+if __name__ == '__main__':
+	test()

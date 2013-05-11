@@ -44,13 +44,34 @@ if etree.VERSION[0:3] == '1.2':
 	etree.register_namespace = register_namespace
 
 
+def get_namespace(element):
+	return element.tag[1:].split('}')[0] if element.tag.startswith('{') else ''
+
+
+def namespace_tag(uri, tag):
+	return etree.QName(uri, tag).text if uri else tag
+
+
+def namespace_path(uri, path):
+	if uri:
+		tags = path.split('/')
+		return '/'.join(map(lambda tag: namespace_tag(uri, tag), tags))
+
+	return path
+
+
 def test():
-	something = etree.Element('{http://some.namespace}token')
+	uri = 'http://some.namespace'
+	something = etree.Element('{%s}token' % uri)
 	result = etree.tostring(something)
-	assert result == '<ns0:token xmlns:ns0="http://some.namespace" />', result
-	etree.register_namespace('', 'http://some.namespace')
+	assert result == '<ns0:token xmlns:ns0="%s" />' % uri, result
+	etree.register_namespace('', uri)
 	result = etree.tostring(something)
-	assert result == '<token xmlns="http://some.namespace" />', result
+	assert result == '<token xmlns="%s" />' % uri, result
+	result = namespace_tag(uri, 'tag')
+	assert result == '{%s}tag' % uri, result
+	result = namespace_path(uri, 'a/b/c')
+	assert result == '{%s}a/{%s}b/{%s}c' % (uri, uri, uri), result
 	print('Test passed !')
 
 
