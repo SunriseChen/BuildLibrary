@@ -31,8 +31,7 @@ def modify_file(filename, modify_list):
 		text = f.read()
 
 	for m in modify_list or []:
-		if m[1] not in text:
-			text = m[0].sub(m[1], text)
+		text = m[0].sub(m[1], text)
 
 	with tempfile.NamedTemporaryFile('w', delete=False) as f:
 		f.write(text)
@@ -132,7 +131,7 @@ class Environment(object):
 		return subprocess.call(cmd) if cmd else False
 
 
-def generate_settings(import_dir, include_path, library_path):
+def generate_settings(project_name, import_dir, include_path, library_path):
 	settings_file = os.path.join(import_dir, 'local_settings.py')
 	if not os.path.exists(settings_file):
 		with open(settings_file, 'w') as f:
@@ -140,28 +139,31 @@ def generate_settings(import_dir, include_path, library_path):
 # -*- coding: utf-8 -*-
 
 include_path = [
-	# Insert include path here!
 ]
 
 library_path = [
-	# Insert library path here!
 ]
 ''')
-
-	def list_line(path):
-		return '\t%r,' % path.replace('\\', '\\\\')
+	
+	def modify_path(match, path):
+		curr_path = re.match(r'^[\'"](.*)[\'"]\s*,$', match.group(2), flags=re.M | re.S)
+		if curr_path:
+			curr_path = re.split(r'[\'"]\s*,\s*[\'"]', curr_path.group(1), flags=re.M)
+		else:
+			curr_path = []
+		tag = '%s\\%s-' % (project_name, project_name)
+		path = [p for p in curr_path if tag not in p] + path
+		return "%s\n\t'%s',\n]" % (match.group(1), "',\n\t'".join(path))
 
 	modify_list = []
 	if include_path:
-		include_path = '\n'.join(map(list_line, include_path))
 		modify_list.append(
-			(re.compile(r'^\s+# Insert include path here!$', re.M),
-			'%s\n\t# Insert include path here!' % include_path))
+			(re.compile(r'^(include_path\s*=\s*\[)\s*(.*?)\s*\]$', re.M | re.S),
+			lambda m: modify_path(m, include_path)))
 	if library_path:
-		library_path = '\n'.join(map(list_line, library_path))
 		modify_list.append(
-			(re.compile(r'^\s+# Insert library path here!$', re.M),
-			'%s\n\t# Insert library path here!' % library_path))
+			(re.compile(r'^(library_path\s*=\s*\[)\s*(.*?)\s*\]$', re.M | re.S),
+			lambda m: modify_path(m, library_path)))
 	modify_file(settings_file, modify_list)
 
 
@@ -181,7 +183,7 @@ def generate_props(lib_info_dir, project_name, import_dir, include_path, library
 	include = root.find(namespace_path(uri, 'PropertyGroup/IncludePath'))
 	library = root.find(namespace_path(uri, 'PropertyGroup/LibraryPath'))
 
-	def modify_path(element, path, project_name, path_macro):
+	def modify_path(element, path, path_macro):
 		if element is not None:
 			curr_path = element.text.split(';')
 			tag = '%s\\%s-' % (project_name, project_name)
@@ -191,8 +193,8 @@ def generate_props(lib_info_dir, project_name, import_dir, include_path, library
 			path.append(path_macro)
 			element.text = ';'.join(path)
 
-	modify_path(include, include_path, project_name, '$(IncludePath)')
-	modify_path(library, library_path, project_name, '$(LibraryPath)')
+	modify_path(include, include_path, '$(IncludePath)')
+	modify_path(library, library_path, '$(LibraryPath)')
 
 	tree.write(props_file, 'utf-8', True)
 
@@ -230,7 +232,7 @@ def generate_import(lib_info_dir, project_name, version, base_dir):
 		include_path = map(abspath, include_path)
 		library_path = map(abspath, library_path)
 
-		generate_settings(import_dir, include_path, library_path)
+		generate_settings(project_name, import_dir, include_path, library_path)
 
 		if env.compiler == 'msvc':
 			generate_props(lib_info_dir, project_name, import_dir, include_path, library_path)
